@@ -21,6 +21,7 @@ struct DashboardView: View {
                     Text("Leaderboard")
                 }
             }
+            .background(Color.teal)
     }
 }
 
