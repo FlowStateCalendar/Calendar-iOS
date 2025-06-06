@@ -9,12 +9,8 @@ import SwiftUI
 
 struct DashboardView: View {
     var body: some View {
-        ZStack {
-            
-            Color(red: 0.4627, green: 0.8392, blue: 1.0)
-            
             VStack {
-                Text("Icon Bar")
+                UserBar()
                 Text("Date Bubbles")
                 ZStack {
                     Color.white
@@ -25,7 +21,10 @@ struct DashboardView: View {
                     Text("Leaderboard")
                 }
             }
-        }
     }
+}
+
+#Preview {
+    DashboardView()
 }
 

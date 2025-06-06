@@ -1,5 +1,5 @@
 //
-//  TasksView.swift
+//  Aquarium.swift
 //  Calendar
 //
 //  Created by Rhyse Summers on 06/06/2025.
@@ -7,12 +7,17 @@
 
 import SwiftUI
 
-struct TasksView: View {
+struct Aquarium: View {
     var body: some View {
         VStack{
             UserBar()
-            Text("Tasks")
+            Text("Welcome to your aquarium")
             
         }
     }
+}
+
+
+#Preview {
+    Aquarium()
 }

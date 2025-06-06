@@ -9,39 +9,44 @@ import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        TabView{
-           DashboardView()
-                .tabItem {
-                    Image(systemName: "house")
-                    Text("Dashboard")
-                }
+        ZStack {
+            //Portrait and landscape?
+            Color(red: 0.4627, green: 0.8392, blue: 1.0)
+                .ignoresSafeArea()
             
-            CalendarView()
-                 .tabItem {
-                     Image(systemName: "calendar")
-                     Text("Calendar")
-                 }
-            
-            TasksView()
-                 .tabItem {
-                     //chart.line.text.clipboard.fill
-                     Image(systemName: "list.clipboard.fill")
-                     Text("Tasks")
-                 }
-            	
-            Text("Game")
-                 .tabItem {
-                     Image(systemName: "gamecontroller")
-                     Text("Game")
-                 }
-            
-            SettingsView()
-                 .tabItem {
-                     //gearshape or gear
-                     Image(systemName: "gear")
-                     Text("Settings")
-                 }
-        }
+            TabView{
+                DashboardView()
+                    .tabItem {
+                        Image(systemName: "house")
+                        Text("Dashboard")
+                    }
+                
+                CalendarView()
+                    .tabItem {
+                        Image(systemName: "calendar")
+                        Text("Calendar")
+                    }
+                
+                TasksView()
+                    .tabItem {
+                        Image(systemName: "list.clipboard.fill")
+                        Text("Tasks")
+                    }
+                
+                Text("Game")
+                    .tabItem {
+                        Image(systemName: "gamecontroller")
+                        Text("Game")
+                    }
+                
+                SettingsView()
+                    .tabItem {
+                        //gearshape or gear
+                        Image(systemName: "gear")
+                        Text("Settings")
+                    }
+            }
+        }//.ignoresSafeArea()
     }
 }
 
