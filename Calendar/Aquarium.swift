@@ -9,11 +9,7 @@ import SwiftUI
 
 struct Aquarium: View {
     var body: some View {
-        VStack{
-            UserBar()
-            Text("Welcome to your aquarium")
-            
-        }
+        Text("Aquarium")
     }
 }
 

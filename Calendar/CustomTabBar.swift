@@ -30,7 +30,7 @@ struct CustomTabBarView: View {
                 case .tasks:
                     TasksView()
                 case .game:
-                    Text("Game View")
+                    AquariumView()
                 case .settings:
                     SettingsView()
                 }
