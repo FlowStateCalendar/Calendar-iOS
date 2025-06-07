@@ -7,6 +7,11 @@
 
 import SwiftUI
 
+struct Task: Identifiable {
+    let id = UUID()
+    let title: String
+}
+
 struct TasksView: View {
     
     let tasks = (1...15).map { Task(title: "Task \($0)") }
