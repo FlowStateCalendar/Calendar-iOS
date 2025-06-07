@@ -22,6 +22,10 @@ struct UserBar: View {
                     //User Icon and Level Progress
                     ZStack{
                         Circle()
+                            .foregroundColor(.gray.opacity(0.60))
+                            .frame(width: 50, height: 50)
+                        
+                        Circle()
                             .stroke(Color.gray.opacity(0.3), lineWidth: 4)
                             .frame(width: 50, height: 50)
                         
@@ -42,7 +46,7 @@ struct UserBar: View {
                         .font(.caption)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 4)
-                        .background(Color.black.opacity(0.1))
+                        .background(Color.gray.opacity(0.60))
                         .clipShape(Capsule())
                 }
                 
@@ -66,7 +70,7 @@ struct UserBar: View {
                 HStack(spacing: 6) {
                     ZStack{
                         Circle()
-                            .foregroundColor(Color.gray.opacity(0.15))
+                            .foregroundColor(Color.gray.opacity(0.60))
                             .padding(22)
                         Image(systemName: "dollarsign.ring")
                             .foregroundColor(.yellow)
@@ -77,7 +81,7 @@ struct UserBar: View {
                         .foregroundColor(.black)
                         .padding(.horizontal)
                         .padding(.vertical, 6)
-                        .background(Color.gray.opacity(0.15))
+                        .background(Color.gray.opacity(0.60))
                         .clipShape(Capsule())
                 }
                 
