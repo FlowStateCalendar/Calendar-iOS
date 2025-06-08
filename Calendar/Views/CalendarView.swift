@@ -21,6 +21,37 @@ struct CalendarView: View {
                 .font(.title2)
                 .bold()
             
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 20) {
+                    ForEach(0..<20, id: \.self) { index in
+                        Circle()
+                            .fill(Color.purple)
+                            .frame(width: 80, height: 80)
+                            .overlay(
+                                Text("\(index + 1)")
+                                    .foregroundColor(.white)
+                                    .font(.headline)
+                            )
+                    }
+                }
+                .padding(.horizontal)
+            }
+            
+            HStack{
+                Button("Day") {
+                    print("Day press")
+                }
+                Spacer()
+                Button("Week") {
+                    print("Week press")
+                }
+                Spacer()
+                Button("Month") {
+                    print("Month press")
+                }
+            }
+            .padding()
+            
             // Day Labels
             let days = ["M", "T", "W", "T", "F", "S", "S"]
             VStack{
@@ -52,6 +83,8 @@ struct CalendarView: View {
                 RoundedRectangle(cornerRadius: 12)
                     .stroke(Color.gray.opacity(0.3), lineWidth: 1)
             )
+            
+            AddTaskButton()
             
             Spacer()
         }
