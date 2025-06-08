@@ -11,10 +11,9 @@ struct DashboardView: View {
     var body: some View {
             VStack {
                 UserBar()
-                Text("Date Bubbles")
                 ZStack {
                     Color.white
-                    Text("Calendar")
+                    Text("Today's Tasks")
                 }
                 ZStack {
                     Color.white

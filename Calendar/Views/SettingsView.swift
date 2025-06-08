@@ -17,57 +17,59 @@ struct SettingsView: View {
             // Background Color
             Color.teal
                 .ignoresSafeArea()
-            
-            //Expandable settings tabs
-            ScrollView {
-                VStack(spacing: 12) {
-                    //Page title
-                    Text("App Settings")
-                    
-                    ExpandableSection(title: "General") {
+            VStack(){
+                //Page title
+                Text("App Settings")
+                
+                //Expandable settings tabs
+                ScrollView {
+                    VStack(spacing: 12) {
                         
-                    }
-                    
-                    ExpandableSection(title: "Audio (move to general?)") {
-                        
-                    }
-                    
-                    ExpandableSection(title: "Notifications") {
-                        VStack(alignment: .leading) {
-                            Toggle("Email Alerts", isOn: $emailAlerts)
-                            Toggle("Push Notifications", isOn: $pushNotifications)
+                        ExpandableSection(title: "General") {
+                            
                         }
-                    }
-                    
-                    ExpandableSection(title: "Dashboard") {
                         
-                    }
-                    
-                    ExpandableSection(title: "Calendar") {
+                        ExpandableSection(title: "Audio (move to general?)") {
+                            
+                        }
                         
-                    }
-                    
-                    ExpandableSection(title: "Tasks") {
-                        
-                    }
-                    
-                    ExpandableSection(title: "Game") {
-                        
-                    }
-                    
-                    ExpandableSection(title: "Account") {
-                        VStack(alignment: .leading) {
-                            Text("Email: user@example.com")
-                            Button("Sign Out", role: .destructive) {
-                                // Sign out action
+                        ExpandableSection(title: "Notifications") {
+                            VStack(alignment: .leading) {
+                                Toggle("Email Alerts", isOn: $emailAlerts)
+                                Toggle("Push Notifications", isOn: $pushNotifications)
                             }
                         }
+                        
+                        ExpandableSection(title: "Dashboard") {
+                            
+                        }
+                        
+                        ExpandableSection(title: "Calendar") {
+                            
+                        }
+                        
+                        ExpandableSection(title: "Tasks") {
+                            
+                        }
+                        
+                        ExpandableSection(title: "Game") {
+                            
+                        }
+                        
+                        ExpandableSection(title: "Account") {
+                            VStack(alignment: .leading) {
+                                Text("Email: user@example.com")
+                                Button("Sign Out") {
+                                    // Sign out action
+                                }
+                            }
+                        }
+                        
                     }
-                    
+                    .padding(.top)
                 }
-                .padding(.top)
+                .navigationTitle("Settings")
             }
-            .navigationTitle("Settings")
         }
     }
 }

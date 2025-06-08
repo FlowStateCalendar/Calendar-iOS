@@ -12,8 +12,11 @@ struct AquariumView: View {
         VStack{
             UserBar()
             Text("Welcome to your aquarium")
-            
+            Spacer()
+            Text("Coming Soon!")
+            Spacer()
         }
+        .background(Color(.teal))
     }
 }
 
