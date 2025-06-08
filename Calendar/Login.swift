@@ -5,6 +5,7 @@
 //  Created by Rhyse Summers on 06/06/2025.
 //
 
+import GoogleSignIn
 import SwiftUI
 
 struct Login: View {
@@ -22,6 +23,20 @@ struct Login: View {
 //                .frame(width: 150, height: 150)
 
             Spacer()
+            
+            Button {
+                // Google Login
+                handleSignupButton()
+            } label: {
+                ZStack {
+                    Capsule()
+                        .foregroundColor(.orange)
+                        .frame(width: 100, height: 40)
+                    Text("Google Login")
+                        .foregroundColor(.white)
+                }
+            }
+            .padding(.bottom, 10)
 
             Button {
                 // Navigate to sign-up screen
@@ -56,9 +71,51 @@ struct Login: View {
         .padding(.horizontal, 20)
         .background(Color.gray.opacity(0.2).ignoresSafeArea())
     }
+    
+    func handleSignupButton() {
+        print("Google Login tapped")
+        
+        if let rootViewController = getRootViewController() {
+            GIDSignIn.sharedInstance.signIn(
+                withPresenting: rootViewController
+            ) { result, error in
+                guard let result else {
+                    // Inspect error
+                    return
+                }
+                // do something with result
+                print(result.user.profile?.name)
+                print(result.user.profile?.email)
+                print(result.user.profile?.imageURL(withDimension: 200))
+            }
+        }
+        
+        
+    }
 }
 
 
 #Preview {
     Login()
+}
+
+func getRootViewController() -> UIViewController? {
+    guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+          let rootViewController = scene.windows.first?.rootViewController else {
+        return nil
+    }
+    return getVisibleViewController(from: rootViewController)
+}
+
+private func getVisibleViewController(from vc: UIViewController) -> UIViewController {
+    if let nav = vc as? UINavigationController {
+        return getVisibleViewController(from: nav.visibleViewController!)
+    }
+    if let tab = vc as? UITabBarController {
+        return getVisibleViewController(from: tab.selectedViewController!)
+    }
+    if let presented = vc.presentedViewController {
+        return getVisibleViewController(from: presented)
+    }
+    return vc
 }
