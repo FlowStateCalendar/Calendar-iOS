@@ -21,6 +21,10 @@ struct TabBarButton: View {
                 Image(systemName: icon)
                     .font(.system(size: 20, weight: .semibold))
                     .foregroundColor(selectedTab == tab ? .black : .gray)
+                
+                Circle()
+                    .fill(selectedTab == tab ? Color.black : Color.clear)
+                    .frame(width: 6, height: 6)
             }
             .frame(maxWidth: .infinity)
         }
