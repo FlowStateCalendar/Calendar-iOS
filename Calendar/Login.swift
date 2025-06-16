@@ -31,40 +31,40 @@ struct Login: View {
                 ZStack {
                     Capsule()
                         .foregroundColor(.orange)
-                        .frame(width: 100, height: 40)
+                        .frame(width: 150, height: 40)
                     Text("Google Login")
                         .foregroundColor(.white)
                 }
             }
             .padding(.bottom, 10)
 
-            Button {
-                // Navigate to sign-up screen
-                print("Sign up tapped")
-            } label: {
-                ZStack {
-                    Capsule()
-                        .foregroundColor(.orange)
-                        .frame(width: 100, height: 40)
-                    Text("Sign Up")
-                        .foregroundColor(.white)
-                }
-            }
-            .padding(.bottom, 10)
-
-            Button {
-                // Perform login and switch view
-                appState.isLoggedIn = true
-                print("Login tapped")
-            } label: {
-                ZStack {
-                    Capsule()
-                        .foregroundColor(.orange)
-                        .frame(width: 100, height: 40)
-                    Text("Login")
-                        .foregroundColor(.white)
-                }
-            }
+//            Button {
+//                // Navigate to sign-up screen
+//                print("Sign up tapped")
+//            } label: {
+//                ZStack {
+//                    Capsule()
+//                        .foregroundColor(.orange)
+//                        .frame(width: 100, height: 40)
+//                    Text("Sign Up")
+//                        .foregroundColor(.white)
+//                }
+//            }
+//            .padding(.bottom, 10)
+//
+//            Button {
+//                // Perform login and switch view
+//                appState.isLoggedIn = true
+//                print("Login tapped")
+//            } label: {
+//                ZStack {
+//                    Capsule()
+//                        .foregroundColor(.orange)
+//                        .frame(width: 100, height: 40)
+//                    Text("Login")
+//                        .foregroundColor(.white)
+//                }
+//            }
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 80)
@@ -84,12 +84,14 @@ struct Login: View {
                     return
                 }
                 // do something with result
-                print(result.user.profile?.name)
-                print(result.user.profile?.email)
-                print(result.user.profile?.imageURL(withDimension: 200))
+                let currentUser = UserModel(name: result.user.profile?.name ?? "InvalidName", email: result.user.profile?.email ?? "InvalidEmail")
+                currentUser.profile = result.user.profile?.imageURL(withDimension: 200)
+                
+                print(result.user.profile?.name ?? "InvalidName")
+                print(result.user.profile?.email ?? "InvalidEmail")
+                print(result.user.profile?.imageURL(withDimension: 200) ?? "InvalidImageURL")
             }
         }
-        
         
     }
 }
