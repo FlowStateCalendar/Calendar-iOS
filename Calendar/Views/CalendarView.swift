@@ -1,145 +1,181 @@
 import SwiftUI
 
-// MARK: - Day Model
-struct CalendarDay: Identifiable, Hashable {
-    let id = UUID()
-    let date: Date
-    let isInCurrentMonth: Bool
-}
-
+// MARK: - Main Container View
 struct CalendarView: View {
-    private let calendar = Calendar(identifier: .gregorian)
-    private let columns = Array(repeating: GridItem(.flexible()), count: 7)
-
-    @State private var currentDate = Date()
-
+    @StateObject private var viewModel = CalendarViewModel()
+    
     var body: some View {
-        VStack(spacing: 16) {
-            UserBar()
-            // Month Title
-            Text(currentDate.formatted(.dateTime.year().month()))
-                .font(.title2)
-                .bold()
+        VStack(spacing: 20) {
+            monthHeader
             
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 20) {
-                    ForEach(0..<20, id: \.self) { index in
-                        Circle()
-                            .fill(Color.purple)
-                            .frame(width: 80, height: 80)
-                            .overlay(
-                                Text("\(index + 1)")
-                                    .foregroundColor(.white)
-                                    .font(.headline)
-                            )
-                    }
-                }
-                .padding(.horizontal)
-            }
-            
-            HStack{
-                Button("Day") {
-                    print("Day press")
-                }
-                Spacer()
-                Button("Week") {
-                    print("Week press")
-                }
-                Spacer()
-                Button("Month") {
-                    print("Month press")
+            Picker("Calendar Scope", selection: $viewModel.scope.animation()) {
+                ForEach(CalendarScope.allCases, id: \.self) { scope in
+                    Text(scope.rawValue).tag(scope)
                 }
             }
-            .padding()
+            .pickerStyle(.segmented)
             
-            // Day Labels
-            let days = ["M", "T", "W", "T", "F", "S", "S"]
-            VStack{
-                HStack {
-                    ForEach(days, id: \.self) { day in
-                        Text(day)
-                            .frame(maxWidth: .infinity)
-                            .foregroundColor(.gray)
-                    }
-                }
-                
-                // Calendar Grid
-                LazyVGrid(columns: columns, spacing: 12) {
-                    ForEach(generateDays(for: currentDate)) { day in
-                        Text("\(calendar.component(.day, from: day.date))")
-                            .frame(maxWidth: .infinity, minHeight: 36)
-                            .padding(6)
-                            .background(calendar.isDateInToday(day.date) ? Color.blue.opacity(0.2) : Color.clear)
-                            .clipShape(Circle())
-                            .foregroundColor(day.isInCurrentMonth ? .primary : .gray)
-                    }
-                }
-                
+            // Switch between the different calendar views
+            switch viewModel.scope {
+            case .day:
+                DayView(viewModel: viewModel)
+            case .week:
+                WeekView(viewModel: viewModel)
+            case .month:
+                MonthView(viewModel: viewModel)
             }
-            .padding()
-            .background(Color.white)
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-            )
-            
-            AddTaskButton()
             
             Spacer()
         }
         .padding()
-        .background(Color(.teal))
+        .background(Color(.systemGray6))
     }
-
-    // MARK: - Generate Calendar Days
-    private func generateDays(for date: Date) -> [CalendarDay] {
-        guard
-            let firstOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: date)),
-            let monthRange = calendar.range(of: .day, in: .month, for: firstOfMonth)
-        else { return [] }
-
-        var days: [CalendarDay] = []
-
-        // Determine the weekday of the first day (adjusted for Monday start)
-        let weekday = calendar.component(.weekday, from: firstOfMonth)
-        let leadingEmptyDays = (weekday + 5) % 7
-
-        // Previous month days
-        if let previousMonth = calendar.date(byAdding: .month, value: -1, to: firstOfMonth),
-           let previousRange = calendar.range(of: .day, in: .month, for: previousMonth),
-           let start = calendar.date(from: calendar.dateComponents([.year, .month], from: previousMonth)) {
-            let prevDays = previousRange.count
-            for i in (prevDays - leadingEmptyDays + 1)...prevDays {
-                if let day = calendar.date(byAdding: .day, value: i - 1, to: start) {
-                    days.append(CalendarDay(date: day, isInCurrentMonth: false))
-                }
+    
+    /// The header view that displays the current title and navigation buttons.
+    private var monthHeader: some View {
+        HStack {
+            Button(action: viewModel.goToPrevious) {
+                Image(systemName: "chevron.left")
+                    .font(.headline)
+            }
+            Spacer()
+            Text(viewModel.currentTitle)
+                .font(.title2)
+                .fontWeight(.semibold)
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            Spacer()
+            Button(action: viewModel.goToNext) {
+                Image(systemName: "chevron.right")
+                    .font(.headline)
             }
         }
-
-        // Current month days
-        for day in monthRange {
-            if let date = calendar.date(byAdding: .day, value: day - 1, to: firstOfMonth) {
-                days.append(CalendarDay(date: date, isInCurrentMonth: true))
-            }
-        }
-
-        // Next month days to fill 42 slots
-        let remaining = 42 - days.count
-        if let nextMonth = calendar.date(byAdding: .month, value: 1, to: firstOfMonth),
-           let start = calendar.date(from: calendar.dateComponents([.year, .month], from: nextMonth)) {
-            for i in 0..<remaining {
-                if let date = calendar.date(byAdding: .day, value: i, to: start) {
-                    days.append(CalendarDay(date: date, isInCurrentMonth: false))
-                }
-            }
-        }
-
-        return days
+        .padding(.horizontal)
     }
 }
 
+// MARK: - Month View
+struct MonthView: View {
+    @ObservedObject var viewModel: CalendarViewModel
+    private let columns = Array(repeating: GridItem(.flexible()), count: 7)
+    
+    var body: some View {
+        VStack {
+            HStack {
+                ForEach(viewModel.weekDaySymbols, id: \.self) { symbol in
+                    Text(symbol)
+                        .frame(maxWidth: .infinity)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+            }
+            
+            LazyVGrid(columns: columns, spacing: 15) {
+                ForEach(viewModel.generateMonthDays()) { day in
+                    dayCell(for: day)
+                }
+            }
+        }
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(15)
+        .shadow(color: .gray.opacity(0.2), radius: 8)
+        .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)))
+    }
+    
+    @ViewBuilder
+    private func dayCell(for day: CalendarDay) -> some View {
+        Text("\(Calendar.current.component(.day, from: day.date))")
+            .frame(maxWidth: .infinity, minHeight: 36)
+            .padding(.vertical, 4)
+            .background(
+                Calendar.current.isDateInToday(day.date) ?
+                Circle().fill(Color.red.opacity(0.8)) :
+                Calendar.current.isDate(day.date, inSameDayAs: viewModel.currentDate) ?
+                Circle().fill(Color.blue.opacity(0.3)) : Circle().fill(Color.clear)
+            )
+            .foregroundColor(
+                Calendar.current.isDateInToday(day.date) ? .white :
+                day.isInCurrentMonth ? .primary : .secondary
+            )
+            .fontWeight(Calendar.current.isDateInToday(day.date) ? .bold : .regular)
+            .onTapGesture {
+                viewModel.currentDate = day.date
+            }
+    }
+}
 
+// MARK: - Week View
+struct WeekView: View {
+    @ObservedObject var viewModel: CalendarViewModel
+    
+    var body: some View {
+        VStack {
+            HStack(spacing: 10) {
+                ForEach(viewModel.generateWeekDays()) { day in
+                    VStack {
+                        Text(day.date.formatted(.dateTime.weekday(.short)))
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        
+                        Text(day.date.formatted(.dateTime.day()))
+                            .font(.system(size: 18, weight: .semibold, design: .rounded))
+                            .frame(width: 36, height: 36)
+                            .background(
+                                Calendar.current.isDateInToday(day.date) ?
+                                Circle().fill(Color.red.opacity(0.8)) :
+                                Calendar.current.isDate(day.date, inSameDayAs: viewModel.currentDate) ?
+                                Circle().fill(Color.blue.opacity(0.3)) : Circle().fill(Color.clear)
+                            )
+                            .foregroundColor(Calendar.current.isDateInToday(day.date) ? .white : .primary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .onTapGesture {
+                        viewModel.currentDate = day.date
+                    }
+                }
+            }
+            
+            // Placeholder for events in the week
+            List {
+                Text("Events for this week...")
+                    .foregroundColor(.secondary)
+            }
+            .listStyle(.plain)
+        }
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(15)
+        .shadow(color: .gray.opacity(0.2), radius: 8)
+        .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)))
+    }
+}
+
+// MARK: - Day View
+struct DayView: View {
+    @ObservedObject var viewModel: CalendarViewModel
+    
+    var body: some View {
+        List(viewModel.fetchEventsForCurrentDate()) { event in
+            HStack {
+                Circle()
+                    .fill(event.color)
+                    .frame(width: 10, height: 10)
+                Text(event.title)
+                Spacer()
+                Text(event.date, style: .time)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.vertical, 8)
+        }
+        .listStyle(.plain)
+        .background(Color(.systemBackground))
+        .cornerRadius(15)
+        .shadow(color: .gray.opacity(0.2), radius: 8)
+        .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)))
+    }
+}
+
+// MARK: - Preview
 #Preview {
     CalendarView()
 }
