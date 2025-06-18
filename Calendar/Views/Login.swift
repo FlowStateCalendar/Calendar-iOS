@@ -10,6 +10,7 @@ import SwiftUI
 
 struct Login: View {
     @EnvironmentObject var appState: AppState
+//    var currentUser: UserModel
 
     var body: some View {
         VStack {

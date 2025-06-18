@@ -7,32 +7,9 @@
 
 import Foundation
 import SwiftUI
+import Combine
 
 // MARK: - Supporting Enums
-enum NotificationType: String, CaseIterable, Codable {
-    case none, local, push
-    
-    var displayName: String {
-        switch self {
-        case .none: return "None"
-        case .local: return "Local"
-        case .push: return "Push"
-        }
-    }
-}
-
-enum NotificationFrequency: String, CaseIterable, Codable {
-    case once, daily, weekly
-    
-    var displayName: String {
-        switch self {
-        case .once: return "Once"
-        case .daily: return "Daily"
-        case .weekly: return "Weekly"
-        }
-    }
-}
-
 enum TaskCategory: String, CaseIterable, Codable {
     case work, health, personal, study, other
     
@@ -58,14 +35,13 @@ enum TaskCategory: String, CaseIterable, Codable {
 }
 
 // MARK: - Task Model
-@Observable
-final class TaskModel: Identifiable, Codable {
+final class TaskModel: ObservableObject, Identifiable, Codable {
     // MARK: - Properties
     let id: UUID
-    var name: String
-    var taskDescription: String
-    var category: TaskCategory
-    var energy: Int {
+    @Published var name: String
+    @Published var taskDescription: String
+    @Published var category: TaskCategory
+    @Published var energy: Int {
         didSet {
             // Clamp energy value between 1 and 5
             energy = min(max(energy, 1), 5)
@@ -73,7 +49,7 @@ final class TaskModel: Identifiable, Codable {
     }
 //    var notificationType: NotificationType
 //    var notificationFrequency: NotificationFrequency
-    var createdAt: Date
+    @Published var createdAt: Date
     
     // MARK: - Computed Properties
     var energyDescription: String {
@@ -104,6 +80,31 @@ final class TaskModel: Identifiable, Codable {
 //        self.notificationType = notificationType
 //        self.notificationFrequency = notificationFrequency
         self.createdAt = Date()
+    }
+    
+    // MARK: - Codable
+    enum CodingKeys: String, CodingKey {
+        case id, name, taskDescription, category, energy, createdAt
+    }
+
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        taskDescription = try container.decode(String.self, forKey: .taskDescription)
+        category = try container.decode(TaskCategory.self, forKey: .category)
+        energy = try container.decode(Int.self, forKey: .energy)
+        createdAt = try container.decode(Date.self, forKey: .createdAt)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(name, forKey: .name)
+        try container.encode(taskDescription, forKey: .taskDescription)
+        try container.encode(category, forKey: .category)
+        try container.encode(energy, forKey: .energy)
+        try container.encode(createdAt, forKey: .createdAt)
     }
     
     // MARK: - Methods

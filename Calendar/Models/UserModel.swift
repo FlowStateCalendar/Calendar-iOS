@@ -7,17 +7,18 @@
 
 import SwiftUI
 import Foundation
+import Combine
 
 // MARK: - User Model
 
-@Observable final class UserModel: Identifiable, Codable {
+final class UserModel: ObservableObject, Identifiable, Codable {
     // MARK: - Properties
     let id: UUID
-    var name: String
-    var email: String
-    var profile: URL?
-    var createdAt: Date
-    var tasks: [TaskModel]	
+    @Published var name: String
+    @Published var email: String
+    @Published var profile: URL?
+    @Published var createdAt: Date
+    @Published var tasks: [TaskModel]
     //var events: [EventModel]
     //var preferences: UserPreferences
     
@@ -120,6 +121,31 @@ import Foundation
 //            currentDate = nextDate
 //        }
 //    }
+
+    // MARK: - Codable
+    enum CodingKeys: String, CodingKey {
+        case id, name, email, profile, createdAt, tasks
+    }
+
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        email = try container.decode(String.self, forKey: .email)
+        profile = try container.decodeIfPresent(URL.self, forKey: .profile)
+        createdAt = try container.decode(Date.self, forKey: .createdAt)
+        tasks = try container.decode([TaskModel].self, forKey: .tasks)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(name, forKey: .name)
+        try container.encode(email, forKey: .email)
+        try container.encode(profile, forKey: .profile)
+        try container.encode(createdAt, forKey: .createdAt)
+        try container.encode(tasks, forKey: .tasks)
+    }
 }
 
 // MARK: - Usage Example

@@ -11,11 +11,13 @@ import SwiftUI
 @main
 struct CalendarApp: App {
     @StateObject private var appState = AppState()
+    @StateObject private var user = UserModel(name: "", email: "")
     
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environmentObject(appState)
+                .environmentObject(user)
                 .onOpenURL { url in
                     GIDSignIn.sharedInstance.handle(url)
                 }
