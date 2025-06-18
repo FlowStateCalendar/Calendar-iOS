@@ -2,6 +2,7 @@ import Foundation
 import UserNotifications
 import SwiftUI
 
+
 class NotificationManager {
     static let shared = NotificationManager()
     private init() {}
@@ -20,7 +21,7 @@ class NotificationManager {
         let content = UNMutableNotificationContent()
         content.title = event.taskName
         content.body = notification.content
-        if let sound = notification.sound, let fileName = sound.fileName {
+        if let fileName = notification.sound.fileName {
             content.sound = UNNotificationSound(named: UNNotificationSoundName(rawValue: fileName))
         } else {
             content.sound = .default
