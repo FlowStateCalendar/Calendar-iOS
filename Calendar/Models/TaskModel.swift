@@ -63,7 +63,7 @@ final class TaskModel: Identifiable, Codable {
     // MARK: - Properties
     let id: UUID
     var name: String
-    var taskDescription: String // Changed from 'description' to 'taskDescription'
+    var taskDescription: String
     var category: TaskCategory
     var energy: Int {
         didSet {
@@ -71,10 +71,9 @@ final class TaskModel: Identifiable, Codable {
             energy = min(max(energy, 1), 5)
         }
     }
-    var notificationType: NotificationType
-    var notificationFrequency: NotificationFrequency
+//    var notificationType: NotificationType
+//    var notificationFrequency: NotificationFrequency
     var createdAt: Date
-    var isCompleted: Bool
     
     // MARK: - Computed Properties
     var energyDescription: String {
@@ -91,22 +90,20 @@ final class TaskModel: Identifiable, Codable {
     // MARK: - Initialization
     init(
         name: String,
-        description: String = "", // Keep the parameter name for ease of use
+        description: String = "",
         category: TaskCategory = .other,
-        energy: Int = 3,
-        notificationType: NotificationType = .none,
-        notificationFrequency: NotificationFrequency = .once,
-        isCompleted: Bool = false
+        energy: Int,
+//        notificationType: NotificationType = .none,
+//        notificationFrequency: NotificationFrequency = .once,
     ) {
         self.id = UUID()
         self.name = name
-        self.taskDescription = description // Assign to renamed property
+        self.taskDescription = description
         self.category = category
         self.energy = min(max(energy, 1), 5) // Ensure valid range
-        self.notificationType = notificationType
-        self.notificationFrequency = notificationFrequency
+//        self.notificationType = notificationType
+//        self.notificationFrequency = notificationFrequency
         self.createdAt = Date()
-        self.isCompleted = isCompleted
     }
     
     // MARK: - Methods
@@ -115,30 +112,26 @@ final class TaskModel: Identifiable, Codable {
         description: String? = nil,
         category: TaskCategory? = nil,
         energy: Int? = nil,
-        notificationType: NotificationType? = nil,
-        notificationFrequency: NotificationFrequency? = nil
+//        notificationType: NotificationType? = nil,
+//        notificationFrequency: NotificationFrequency? = nil
     ) {
         if let name = name { self.name = name }
-        if let description = description { self.taskDescription = description } // Updated reference
+        if let description = description { self.taskDescription = description }
         if let category = category { self.category = category }
         if let energy = energy { self.energy = energy } // didSet will clamp the value
-        if let notificationType = notificationType { self.notificationType = notificationType }
-        if let notificationFrequency = notificationFrequency { self.notificationFrequency = notificationFrequency }
-    }
-    
-    func toggleCompletion() {
-        isCompleted.toggle()
+//        if let notificationType = notificationType { self.notificationType = notificationType }
+//        if let notificationFrequency = notificationFrequency { self.notificationFrequency = notificationFrequency }
     }
     
     func duplicate() -> TaskModel {
         return TaskModel(
             name: "\(name) (Copy)",
-            description: taskDescription, // Updated reference
+            description: taskDescription,
             category: category,
             energy: energy,
-            notificationType: notificationType,
-            notificationFrequency: notificationFrequency,
-            isCompleted: false
+//            notificationType: notificationType,
+//            notificationFrequency: notificationFrequency,
+//            isCompleted: false
         )
     }
 }
@@ -154,8 +147,9 @@ extension TaskModel: Hashable {
     }
 }
 
+// Use for errors - use case: print(task)
 extension TaskModel: CustomStringConvertible {
-    var description: String { // This satisfies CustomStringConvertible protocol
+    var description: String {
         return "Task(name: \(name), category: \(category.displayName), energy: \(energy))"
     }
 }
