@@ -48,7 +48,7 @@ struct CustomTabBarView: View {
                     TabBarButton(icon: "gear", tab: .settings, selectedTab: $selectedTab)
                 }
                 .padding(.top, 10)
-                .padding(.bottom, geometry.safeAreaInsets.bottom)
+                .padding(.bottom, 2)
                 .padding(.horizontal, 20)
                 .background(Color.white.ignoresSafeArea(edges: .bottom))
                 .frame(maxWidth: .infinity)

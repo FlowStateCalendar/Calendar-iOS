@@ -53,19 +53,19 @@ struct Login: View {
 //            }
 //            .padding(.bottom, 10)
 //
-//            Button {
-//                // Perform login and switch view
-//                appState.isLoggedIn = true
-//                print("Login tapped")
-//            } label: {
-//                ZStack {
-//                    Capsule()
-//                        .foregroundColor(.orange)
-//                        .frame(width: 100, height: 40)
-//                    Text("Login")
-//                        .foregroundColor(.white)
-//                }
-//            }
+           Button {
+               // Perform login and switch view
+               appState.isLoggedIn = true
+               print("Login tapped")
+           } label: {
+               ZStack {
+                   Capsule()
+                       .foregroundColor(.orange)
+                       .frame(width: 100, height: 40)
+                   Text("Test Login")
+                       .foregroundColor(.white)
+               }
+           }
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 80)

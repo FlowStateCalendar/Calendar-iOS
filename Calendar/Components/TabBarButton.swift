@@ -17,16 +17,14 @@ struct TabBarButton: View {
                 selectedTab = tab
             }
         }) {
-            VStack(spacing: 4) {
+            VStack(spacing: 0) {
                 Image(systemName: icon)
                     .font(.system(size: 20, weight: .semibold))
                     .foregroundColor(selectedTab == tab ? .black : .gray)
-                
-                Circle()
-                    .fill(selectedTab == tab ? Color.black : Color.clear)
-                    .frame(width: 6, height: 6)
             }
+            .frame(height: 32)
             .frame(maxWidth: .infinity)
+            
         }
     }
 }
