@@ -36,8 +36,6 @@ struct CustomTabBarView: View {
                         SettingsView()
                     }
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.white)
                 
                 // Tab Bar
                 HStack {
@@ -52,7 +50,7 @@ struct CustomTabBarView: View {
                 .padding(.horizontal, 20)
                 .background(Color.white.ignoresSafeArea(edges: .bottom))
                 .frame(maxWidth: .infinity)
-                .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: -2)
+                .shadow(color: .black.opacity(0.1), radius: 3, x: 0, y: -1)
             }
         }
     }
