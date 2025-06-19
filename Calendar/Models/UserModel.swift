@@ -63,64 +63,6 @@ final class UserModel: ObservableObject, Identifiable, Codable {
 //            generateEventsForTask(task)
 //        }
 //    }
-    
-//    // MARK: - Event Generation
-//    func generateEventsForTask(_ task: TaskModel) {
-//        guard task.notificationType != .none else { return }
-//        
-//        let startDate = preferences.eventGenerationStartDate
-//        let endDate = Calendar.current.date(byAdding: .month, value: preferences.eventGenerationMonths, to: startDate) ?? startDate
-//        
-//        switch task.notificationFrequency {
-//        case .once:
-//            generateOnceEvent(for: task, startDate: startDate)
-//        case .daily:
-//            generateDailyEvents(for: task, from: startDate, to: endDate)
-//        case .weekly:
-//            generateWeeklyEvents(for: task, from: startDate, to: endDate)
-//        }
-//    }
-    
-//    private func generateOnceEvent(for task: TaskModel, startDate: Date) {
-//        let scheduledDate = preferences.preferredTimeOfDay.appliedTo(date: startDate)
-//        let event = TaskEvent(from: task, scheduledDate: scheduledDate)
-//        events.append(event)
-//    }
-//    
-//    private func generateDailyEvents(for task: TaskModel, from startDate: Date, to endDate: Date) {
-//        let calendar = Calendar.current
-//        var currentDate = startDate
-//        
-//        while currentDate <= endDate {
-//            let scheduledDate = preferences.preferredTimeOfDay.appliedTo(date: currentDate)
-//            let event = TaskEvent(from: task, scheduledDate: scheduledDate)
-//            events.append(event)
-//            
-//            guard let nextDate = calendar.date(byAdding: .day, value: 1, to: currentDate) else { break }
-//            currentDate = nextDate
-//        }
-//    }
-    
-//    private func generateWeeklyEvents(for task: TaskModel, from startDate: Date, to endDate: Date) {
-//        let calendar = Calendar.current
-//        var currentDate = startDate
-//        
-//        // Align to preferred day of week if set
-//        if let preferredWeekday = preferences.preferredWeekday {
-//            let currentWeekday = calendar.component(.weekday, from: currentDate)
-//            let daysToAdd = (preferredWeekday - currentWeekday + 7) % 7
-//            currentDate = calendar.date(byAdding: .day, value: daysToAdd, to: currentDate) ?? currentDate
-//        }
-//        
-//        while currentDate <= endDate {
-//            let scheduledDate = preferences.preferredTimeOfDay.appliedTo(date: currentDate)
-//            let event = TaskEvent(from: task, scheduledDate: scheduledDate)
-//            events.append(event)
-//            
-//            guard let nextDate = calendar.date(byAdding: .weekOfYear, value: 1, to: currentDate) else { break }
-//            currentDate = nextDate
-//        }
-//    }
 
     // MARK: - Codable
     enum CodingKeys: String, CodingKey {
