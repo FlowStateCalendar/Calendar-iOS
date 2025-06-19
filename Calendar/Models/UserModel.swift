@@ -159,6 +159,7 @@ extension UserModel {
         let workoutTask = TaskModel(
             name: "Morning Workout",
             description: "30-minute cardio session",
+            frequency: .none,
             category: .health,
             energy: 4,
 //            notificationType: .local,
@@ -168,6 +169,7 @@ extension UserModel {
         let codeReviewTask = TaskModel(
             name: "Code Review",
             description: "Review team's pull requests",
+            frequency: .none,
             category: .work,
             energy: 3,
 //            notificationType: .push,
@@ -177,6 +179,7 @@ extension UserModel {
         let weeklyPlanningTask = TaskModel(
             name: "Weekly Planning",
             description: "Plan tasks for the upcoming week",
+            frequency: .none,
             category: .work,
             energy: 2,
 //            notificationType: .local,
