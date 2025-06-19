@@ -19,7 +19,7 @@ final class UserModel: ObservableObject, Identifiable, Codable {
     @Published var profile: URL?
     @Published var createdAt: Date
     @Published var tasks: [TaskModel]
-    //var events: [EventModel]
+    @Published var events: [EventModel]
     //var preferences: UserPreferences
     
     // MARK: - Computed Properties
@@ -40,7 +40,7 @@ final class UserModel: ObservableObject, Identifiable, Codable {
         self.profile = nil
         self.createdAt = Date()
         self.tasks = []
-//        self.events = []
+        self.events = []
 //        self.preferences = UserPreferences()
     }
     
@@ -124,7 +124,7 @@ final class UserModel: ObservableObject, Identifiable, Codable {
 
     // MARK: - Codable
     enum CodingKeys: String, CodingKey {
-        case id, name, email, profile, createdAt, tasks
+        case id, name, email, profile, createdAt, tasks, events
     }
 
     required init(from decoder: Decoder) throws {
@@ -135,6 +135,7 @@ final class UserModel: ObservableObject, Identifiable, Codable {
         profile = try container.decodeIfPresent(URL.self, forKey: .profile)
         createdAt = try container.decode(Date.self, forKey: .createdAt)
         tasks = try container.decode([TaskModel].self, forKey: .tasks)
+        events = try container.decode([EventModel].self, forKey: .events)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -145,6 +146,7 @@ final class UserModel: ObservableObject, Identifiable, Codable {
         try container.encode(profile, forKey: .profile)
         try container.encode(createdAt, forKey: .createdAt)
         try container.encode(tasks, forKey: .tasks)
+        try container.encode(events, forKey: .events)
     }
 }
 

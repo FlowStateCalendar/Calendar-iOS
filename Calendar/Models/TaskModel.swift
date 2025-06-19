@@ -34,6 +34,10 @@ enum TaskCategory: String, CaseIterable, Codable {
     }
 }
 
+enum TaskFrequency: String, CaseIterable, Codable {
+    case none, daily, weekly, monthly
+}
+
 // MARK: - Task Model
 final class TaskModel: ObservableObject, Identifiable, Codable {
     // MARK: - Properties
@@ -41,6 +45,7 @@ final class TaskModel: ObservableObject, Identifiable, Codable {
     @Published var name: String
     @Published var taskDescription: String
     @Published var category: TaskCategory
+    @Published var frequency: TaskFrequency
     @Published var energy: Int {
         didSet {
             // Clamp energy value between 1 and 5
@@ -67,6 +72,7 @@ final class TaskModel: ObservableObject, Identifiable, Codable {
     init(
         name: String,
         description: String = "",
+        frequency: TaskFrequency,
         category: TaskCategory = .other,
         energy: Int,
 //        notificationType: NotificationType = .none,
@@ -75,6 +81,7 @@ final class TaskModel: ObservableObject, Identifiable, Codable {
         self.id = UUID()
         self.name = name
         self.taskDescription = description
+        self.frequency = frequency
         self.category = category
         self.energy = min(max(energy, 1), 5) // Ensure valid range
 //        self.notificationType = notificationType
@@ -84,7 +91,7 @@ final class TaskModel: ObservableObject, Identifiable, Codable {
     
     // MARK: - Codable
     enum CodingKeys: String, CodingKey {
-        case id, name, taskDescription, category, energy, createdAt
+        case id, name, taskDescription, category, frequency, energy, createdAt
     }
 
     required init(from decoder: Decoder) throws {
@@ -93,6 +100,7 @@ final class TaskModel: ObservableObject, Identifiable, Codable {
         name = try container.decode(String.self, forKey: .name)
         taskDescription = try container.decode(String.self, forKey: .taskDescription)
         category = try container.decode(TaskCategory.self, forKey: .category)
+        frequency = try container.decode(TaskFrequency.self, forKey: .frequency)
         energy = try container.decode(Int.self, forKey: .energy)
         createdAt = try container.decode(Date.self, forKey: .createdAt)
     }
@@ -103,6 +111,7 @@ final class TaskModel: ObservableObject, Identifiable, Codable {
         try container.encode(name, forKey: .name)
         try container.encode(taskDescription, forKey: .taskDescription)
         try container.encode(category, forKey: .category)
+        try container.encode(frequency, forKey: .frequency)
         try container.encode(energy, forKey: .energy)
         try container.encode(createdAt, forKey: .createdAt)
     }
@@ -112,6 +121,7 @@ final class TaskModel: ObservableObject, Identifiable, Codable {
         name: String? = nil,
         description: String? = nil,
         category: TaskCategory? = nil,
+        frequency: TaskFrequency? = nil,
         energy: Int? = nil,
 //        notificationType: NotificationType? = nil,
 //        notificationFrequency: NotificationFrequency? = nil
@@ -119,6 +129,7 @@ final class TaskModel: ObservableObject, Identifiable, Codable {
         if let name = name { self.name = name }
         if let description = description { self.taskDescription = description }
         if let category = category { self.category = category }
+        if let frequency = frequency { self.frequency = frequency }
         if let energy = energy { self.energy = energy } // didSet will clamp the value
 //        if let notificationType = notificationType { self.notificationType = notificationType }
 //        if let notificationFrequency = notificationFrequency { self.notificationFrequency = notificationFrequency }
@@ -128,6 +139,7 @@ final class TaskModel: ObservableObject, Identifiable, Codable {
         return TaskModel(
             name: "\(name) (Copy)",
             description: taskDescription,
+            frequency: frequency,
             category: category,
             energy: energy,
 //            notificationType: notificationType,
@@ -158,9 +170,9 @@ extension TaskModel: CustomStringConvertible {
 // MARK: - Sample Data
 extension TaskModel {
     static let sampleTasks: [TaskModel] = [
-        TaskModel(name: "Morning Workout", description: "30-minute cardio session", category: .health, energy: 4),
-        TaskModel(name: "Review Code", description: "Review pull requests", category: .work, energy: 3),
-        TaskModel(name: "Read Book", description: "Read 20 pages", category: .personal, energy: 2),
-        TaskModel(name: "Study Swift", description: "Learn new SwiftUI features", category: .study, energy: 4)
+        TaskModel(name: "Morning Workout", description: "30-minute cardio session", frequency: .none, category: .health, energy: 4),
+        TaskModel(name: "Review Code", description: "Review pull requests", frequency: .daily, category: .work, energy: 3),
+        TaskModel(name: "Read Book", description: "Read 20 pages", frequency: .none, category: .personal, energy: 2),
+        TaskModel(name: "Study Swift", description: "Learn new SwiftUI features", frequency: .none, category: .study, energy: 4)
     ]
 }
