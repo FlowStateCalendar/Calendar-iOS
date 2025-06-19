@@ -1,3 +1,10 @@
+//
+//  NotificationModel.swift
+//  Calendar
+//
+//  Created by Rhyse Summers on 15/06/2025.
+//
+
 import Foundation
 
 // MARK: - Notification Frequency

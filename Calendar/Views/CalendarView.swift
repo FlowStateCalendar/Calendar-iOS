@@ -1,19 +1,48 @@
+//
+//  CalendarView.swift
+//  Calendar
+//
+//  Created by Rhyse Summers on 10/06/2025.
+//
+
 import SwiftUI
 
 // MARK: - Main Container View
 struct CalendarView: View {
     @StateObject private var viewModel = CalendarViewModel()
+    @Namespace private var tabBarNamespace
     
     var body: some View {
         VStack(spacing: 20) {
             monthHeader
             
-            Picker("Calendar Scope", selection: $viewModel.scope.animation()) {
-                ForEach(CalendarScope.allCases, id: \.self) { scope in
-                    Text(scope.rawValue).tag(scope)
+            // Custom tab bar for calendar scope
+            HStack(spacing: 32) {
+                ForEach(CalendarScope.allCases, id: \ .self) { scope in
+                    Button(action: {
+                        viewModel.scope = scope
+                    }) {
+                        VStack(spacing: 4) {
+                            Text(scope.rawValue)
+                                .font(.headline)
+                                .fontWeight(viewModel.scope == scope ? .bold : .regular)
+                                .foregroundColor(viewModel.scope == scope ? Color.accentColor : .secondary)
+                            if viewModel.scope == scope {
+                                Capsule()
+                                    .fill(Color.accentColor)
+                                    .frame(height: 3)
+                                    .matchedGeometryEffect(id: "underline", in: tabBarNamespace)
+                            } else {
+                                Capsule()
+                                    .fill(Color.clear)
+                                    .frame(height: 3)
+                            }
+                        }
+                    }
+                    .buttonStyle(PlainButtonStyle())
                 }
             }
-            .pickerStyle(.segmented)
+            .padding(.vertical, 8)
             
             // Switch between the different calendar views
             switch viewModel.scope {
@@ -84,20 +113,26 @@ struct MonthView: View {
     
     @ViewBuilder
     private func dayCell(for day: CalendarDay) -> some View {
+        let isToday = Calendar.current.isDateInToday(day.date)
+        let isSelected = Calendar.current.isDate(day.date, inSameDayAs: viewModel.currentDate)
+        let isInCurrentMonth = day.isInCurrentMonth
+        
         Text("\(Calendar.current.component(.day, from: day.date))")
             .frame(maxWidth: .infinity, minHeight: 36)
             .padding(.vertical, 4)
             .background(
-                Calendar.current.isDateInToday(day.date) ?
+                isToday ?
                 Circle().fill(Color.red.opacity(0.8)) :
-                Calendar.current.isDate(day.date, inSameDayAs: viewModel.currentDate) ?
+                isSelected ?
                 Circle().fill(Color.blue.opacity(0.3)) : Circle().fill(Color.clear)
             )
             .foregroundColor(
-                Calendar.current.isDateInToday(day.date) ? .white :
-                day.isInCurrentMonth ? .primary : .secondary
+                isToday ? .white :
+                isInCurrentMonth ? .primary : Color.secondary.opacity(0.5)
             )
-            .fontWeight(Calendar.current.isDateInToday(day.date) ? .bold : .regular)
+            .fontWeight(isToday ? .bold : .regular)
+            .opacity(isInCurrentMonth ? 1.0 : 0.5)
+            .contentShape(Rectangle())
             .onTapGesture {
                 viewModel.currentDate = day.date
             }
@@ -178,4 +213,16 @@ struct DayView: View {
 // MARK: - Preview
 #Preview {
     CalendarView()
+}
+
+// Add this View extension at the bottom of the file for conditional modifiers
+extension View {
+    @ViewBuilder
+    func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
+        if condition {
+            transform(self)
+        } else {
+            self
+        }
+    }
 }

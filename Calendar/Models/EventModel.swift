@@ -2,7 +2,7 @@
 //  EventModel.swift
 //  Calendar
 //
-//  Created by Rhyse Summers on 10/06/2025.
+//  Created by Rhyse Summers on 12/06/2025.
 //
 
 import Foundation

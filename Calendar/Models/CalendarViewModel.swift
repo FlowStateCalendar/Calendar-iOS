@@ -70,18 +70,22 @@ class CalendarViewModel: ObservableObject {
     func generateMonthDays() -> [CalendarDay] {
         guard
             let monthInterval = calendar.dateInterval(of: .month, for: currentDate),
-            let monthFirstWeek = calendar.dateInterval(of: .weekOfMonth, for: monthInterval.start)
+            let firstDayOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: currentDate)),
+            let lastDayOfMonth = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: firstDayOfMonth)
         else { return [] }
-        
+
+        // Find the first day of the week containing the first of the month
+        let firstVisibleDay = calendar.dateInterval(of: .weekOfMonth, for: firstDayOfMonth)?.start ?? firstDayOfMonth
+        // Find the last day of the week containing the last of the month
+        let lastVisibleDay = calendar.dateInterval(of: .weekOfMonth, for: lastDayOfMonth)?.end ?? lastDayOfMonth
+
         var days: [CalendarDay] = []
-        calendar.enumerateDates(startingAfter: monthFirstWeek.start, matching: DateComponents(hour: 0), matchingPolicy: .nextTime) { date, _, stop in
-            guard let date = date else { return }
-            if date >= monthInterval.end {
-                stop = true
-                return
-            }
+        var date = firstVisibleDay
+        while date < lastVisibleDay {
             let isInCurrentMonth = calendar.isDate(date, equalTo: currentDate, toGranularity: .month)
             days.append(CalendarDay(date: date, isInCurrentMonth: isInCurrentMonth))
+            guard let nextDate = calendar.date(byAdding: .day, value: 1, to: date) else { break }
+            date = nextDate
         }
         return days
     }
