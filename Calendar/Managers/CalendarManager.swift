@@ -9,9 +9,10 @@ import Foundation
 
 class CalendarManager {
     /// Generates events for a given task from a start date for a specified number of days ahead.
-    static func generateEvents(for task: TaskModel, from startDate: Date, daysAhead: Int) -> [EventModel] {
+    static func generateEvents(for task: TaskModel, daysAhead: Int = 30) -> [EventModel] {
         var events: [EventModel] = []
         let calendar = Calendar.current
+        let startDate = task.taskDate // Use the task's scheduled date
         let endDate = calendar.date(byAdding: .day, value: daysAhead, to: startDate) ?? startDate
         var currentDate = startDate
         
@@ -29,7 +30,7 @@ class CalendarManager {
             }
         }
         
-        // Assume task.frequency exists and is of type TaskFrequency
+        // Use task.frequency
         let frequency = task.frequency
         let eventLength: TimeInterval = 60 * 60 // Default 1 hour, adjust as needed
         
@@ -57,10 +58,13 @@ class CalendarManager {
         for task in user.tasks {
             // Find the latest event for this task
             let taskEvents = user.events.filter { $0.taskId == task.id }
-            let latestDate = taskEvents.map { $0.scheduledDate }.max() ?? Date()
+            let latestDate = taskEvents.map { $0.scheduledDate }.max() ?? task.taskDate
             if latestDate < endDate {
-                let newEvents = generateEvents(for: task, from: latestDate, daysAhead: Calendar.current.dateComponents([.day], from: latestDate, to: endDate).day ?? 0)
-                user.events.append(contentsOf: newEvents)
+                let daysAhead = Calendar.current.dateComponents([.day], from: latestDate, to: endDate).day ?? 0
+                if daysAhead > 0 {
+                    let newEvents = generateEvents(for: task, daysAhead: daysAhead)
+                    user.events.append(contentsOf: newEvents)
+                }
             }
         }
     }

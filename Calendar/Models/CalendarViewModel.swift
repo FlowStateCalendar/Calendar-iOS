@@ -10,7 +10,6 @@ import SwiftUI
 
 class CalendarViewModel: ObservableObject {
     private let calendar = Calendar(identifier: .gregorian)
-    private let sampleEvents = Event.sampleEvents
     
     @Published var currentDate = Date()
     @Published var scope: CalendarScope = .month
@@ -104,9 +103,31 @@ class CalendarViewModel: ObservableObject {
         return days
     }
     
-    func fetchEventsForCurrentDate() -> [Event] {
-        sampleEvents.filter { event in
-            calendar.isDate(event.date, inSameDayAs: currentDate)
-        }
+    // MARK: - Event Filtering Methods
+    
+    func fetchEventsForCurrentDate(from user: UserModel) -> [EventModel] {
+        return user.events.filter { event in
+            calendar.isDate(event.scheduledDate, inSameDayAs: currentDate)
+        }.sorted { $0.scheduledDate < $1.scheduledDate }
+    }
+    
+    func fetchEventsForWeek(from user: UserModel) -> [EventModel] {
+        guard let weekInterval = calendar.dateInterval(of: .weekOfMonth, for: currentDate) else { return [] }
+        return user.events.filter { event in
+            event.scheduledDate >= weekInterval.start && event.scheduledDate < weekInterval.end
+        }.sorted { $0.scheduledDate < $1.scheduledDate }
+    }
+    
+    func fetchEventsForMonth(from user: UserModel) -> [EventModel] {
+        guard let monthInterval = calendar.dateInterval(of: .month, for: currentDate) else { return [] }
+        return user.events.filter { event in
+            event.scheduledDate >= monthInterval.start && event.scheduledDate < monthInterval.end
+        }.sorted { $0.scheduledDate < $1.scheduledDate }
+    }
+    
+    func getEventsForDate(_ date: Date, from user: UserModel) -> [EventModel] {
+        return user.events.filter { event in
+            calendar.isDate(event.scheduledDate, inSameDayAs: date)
+        }.sorted { $0.scheduledDate < $1.scheduledDate }
     }
 }

@@ -104,6 +104,7 @@ extension UserModel {
             frequency: .none,
             category: .health,
             energy: 4,
+            taskDate: Date(),
 //            notificationType: .local,
 //            notificationFrequency: .daily
         )
@@ -114,6 +115,7 @@ extension UserModel {
             frequency: .none,
             category: .work,
             energy: 3,
+            taskDate: Date(),
 //            notificationType: .push,
 //            notificationFrequency: .daily
         )
@@ -124,6 +126,7 @@ extension UserModel {
             frequency: .none,
             category: .work,
             energy: 2,
+            taskDate: Date(),
 //            notificationType: .local,
 //            notificationFrequency: .weekly
         )

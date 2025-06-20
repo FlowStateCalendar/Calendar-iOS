@@ -1,5 +1,5 @@
 //
-//  TaskModel.swift
+//  TestTaskModel.swift
 //  Calendar
 //
 //  Created by Rhyse Summers on 11/06/2025.
@@ -54,7 +54,7 @@ final class TaskModel: ObservableObject, Identifiable, Codable {
     }
 //    var notificationType: NotificationType
 //    var notificationFrequency: NotificationFrequency
-    @Published var createdAt: Date
+    @Published var taskDate: Date
     
     // MARK: - Computed Properties
     var energyDescription: String {
@@ -75,6 +75,7 @@ final class TaskModel: ObservableObject, Identifiable, Codable {
         frequency: TaskFrequency,
         category: TaskCategory = .other,
         energy: Int,
+        taskDate: Date,
 //        notificationType: NotificationType = .none,
 //        notificationFrequency: NotificationFrequency = .once,
     ) {
@@ -86,12 +87,12 @@ final class TaskModel: ObservableObject, Identifiable, Codable {
         self.energy = min(max(energy, 1), 5) // Ensure valid range
 //        self.notificationType = notificationType
 //        self.notificationFrequency = notificationFrequency
-        self.createdAt = Date()
+        self.taskDate = taskDate
     }
     
     // MARK: - Codable
     enum CodingKeys: String, CodingKey {
-        case id, name, taskDescription, category, frequency, energy, createdAt
+        case id, name, taskDescription, category, frequency, energy, taskDate
     }
 
     required init(from decoder: Decoder) throws {
@@ -102,7 +103,7 @@ final class TaskModel: ObservableObject, Identifiable, Codable {
         category = try container.decode(TaskCategory.self, forKey: .category)
         frequency = try container.decode(TaskFrequency.self, forKey: .frequency)
         energy = try container.decode(Int.self, forKey: .energy)
-        createdAt = try container.decode(Date.self, forKey: .createdAt)
+        taskDate = try container.decode(Date.self, forKey: .taskDate)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -113,7 +114,7 @@ final class TaskModel: ObservableObject, Identifiable, Codable {
         try container.encode(category, forKey: .category)
         try container.encode(frequency, forKey: .frequency)
         try container.encode(energy, forKey: .energy)
-        try container.encode(createdAt, forKey: .createdAt)
+        try container.encode(taskDate, forKey: .taskDate)
     }
     
     // MARK: - Methods
@@ -123,6 +124,7 @@ final class TaskModel: ObservableObject, Identifiable, Codable {
         category: TaskCategory? = nil,
         frequency: TaskFrequency? = nil,
         energy: Int? = nil,
+        taskDate: Date? = nil,
 //        notificationType: NotificationType? = nil,
 //        notificationFrequency: NotificationFrequency? = nil
     ) {
@@ -142,6 +144,7 @@ final class TaskModel: ObservableObject, Identifiable, Codable {
             frequency: frequency,
             category: category,
             energy: energy,
+            taskDate: taskDate,
 //            notificationType: notificationType,
 //            notificationFrequency: notificationFrequency,
 //            isCompleted: false
@@ -170,9 +173,9 @@ extension TaskModel: CustomStringConvertible {
 // MARK: - Sample Data
 extension TaskModel {
     static let sampleTasks: [TaskModel] = [
-        TaskModel(name: "Morning Workout", description: "30-minute cardio session", frequency: .none, category: .health, energy: 4),
-        TaskModel(name: "Review Code", description: "Review pull requests", frequency: .daily, category: .work, energy: 3),
-        TaskModel(name: "Read Book", description: "Read 20 pages", frequency: .none, category: .personal, energy: 2),
-        TaskModel(name: "Study Swift", description: "Learn new SwiftUI features", frequency: .none, category: .study, energy: 4)
+        TaskModel(name: "Morning Workout", description: "30-minute cardio session", frequency: .daily, category: .health, energy: 4, taskDate: Calendar.current.date(byAdding: .day, value: 0, to: Date()) ?? Date()),
+        TaskModel(name: "Review Code", description: "Review pull requests", frequency: .daily, category: .work, energy: 3, taskDate: Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()),
+        TaskModel(name: "Read Book", description: "Read 20 pages", frequency: .weekly, category: .personal, energy: 2, taskDate: Calendar.current.date(byAdding: .day, value: 2, to: Date()) ?? Date()),
+        TaskModel(name: "Study Swift", description: "Learn new SwiftUI features", frequency: .none, category: .study, energy: 4, taskDate: Calendar.current.date(byAdding: .day, value: 3, to: Date()) ?? Date())
     ]
 }
