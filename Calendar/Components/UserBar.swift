@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct UserBar: View {
+    @EnvironmentObject var user: UserModel
+    
     var coins: Int = 100
     var progress: Double = 0.65
     var level: Int = 12
@@ -71,12 +73,8 @@ struct UserBar: View {
                         .rotationEffect(.degrees(-90))
                         .frame(width: 50, height: 50)
                     
-                    //Insert the profile picture here
-                    Image(systemName: "person.circle")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 40, height: 40)
-                        .clipShape(Circle())
+                    // Profile Picture
+                    ProfileImageView(profileURL: user.profile, size: 40)
                 }
                 // Level pill
                 Text("Lv \(level)")
@@ -89,9 +87,64 @@ struct UserBar: View {
             }
         }
     }
+}
+
+// MARK: - Profile Image Component
+struct ProfileImageView: View {
+    let profileURL: URL?
+    let size: CGFloat
     
+    var body: some View {
+        Group {
+            if let url = profileURL {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .empty:
+                        // Loading state
+                        ProgressView()
+                            .frame(width: size, height: size)
+                    case .success(let image):
+                        // Successfully loaded image
+                        image
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: size, height: size)
+                            .clipShape(Circle())
+                    case .failure(_):
+                        // Failed to load - show default avatar
+                        DefaultAvatarView(size: size)
+                    @unknown default:
+                        DefaultAvatarView(size: size)
+                    }
+                }
+            } else {
+                // No URL provided - show default avatar
+                DefaultAvatarView(size: size)
+            }
+        }
+        .frame(width: size, height: size)
+        .clipShape(Circle())
+    }
+}
+
+// MARK: - Default Avatar Component
+struct DefaultAvatarView: View {
+    let size: CGFloat
+    
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(Color.blue.opacity(0.3))
+                .frame(width: size, height: size)
+            
+            Image(systemName: "person.fill")
+                .font(.system(size: size * 0.5))
+                .foregroundColor(.blue)
+        }
+    }
 }
 
 #Preview {
     UserBar()
+        .environmentObject(UserModel(name: "John Doe", email: "john@example.com"))
 }
