@@ -10,7 +10,7 @@ import SwiftUI
 
 struct Login: View {
     @EnvironmentObject var appState: AppState
-//    var currentUser: UserModel
+    @EnvironmentObject var user: UserModel
 
     var body: some View {
         VStack {
@@ -85,12 +85,16 @@ struct Login: View {
                     return
                 }
                 // do something with result
-                let currentUser = UserModel(name: result.user.profile?.name ?? "InvalidName", email: result.user.profile?.email ?? "InvalidEmail")
-                currentUser.profile = result.user.profile?.imageURL(withDimension: 200)
+                
+                user.name = result.user.profile?.name ?? "InvalidName"
+                user.email = result.user.profile?.email ?? "InvalidEmail"
+                user.profile = result.user.profile?.imageURL(withDimension: 200)
                 
                 print(result.user.profile?.name ?? "InvalidName")
                 print(result.user.profile?.email ?? "InvalidEmail")
                 print(result.user.profile?.imageURL(withDimension: 200) ?? "InvalidImageURL")
+                
+                appState.isLoggedIn = true
             }
         }
         

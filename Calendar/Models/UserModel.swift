@@ -55,6 +55,14 @@ final class UserModel: ObservableObject, Identifiable, Codable {
         //events.removeAll { $0.taskId == task.id }
     }
     
+    func logout() {
+        self.name = ""
+        self.email = ""
+        self.profile = nil
+        self.tasks = []
+        self.events = []
+    }
+    
 //    func updateTask(_ task: TaskModel) {
 //        if let index = tasks.firstIndex(where: { $0.id == task.id }) {
 //            tasks[index] = task
