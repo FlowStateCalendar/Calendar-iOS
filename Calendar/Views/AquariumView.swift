@@ -16,11 +16,12 @@ struct AquariumView: View {
             Text("Coming Soon!")
             Spacer()
         }
-        .background(Color(.teal))
+        .background(Image("fishBackground").resizable().edgesIgnoringSafeArea(.all))
     }
 }
 
 
 #Preview {
     AquariumView()
+        .environmentObject(UserModel(name: "John Doe", email: "john@example.com"))
 }

@@ -10,10 +10,9 @@ import SwiftUI
 struct UserBar: View {
     @EnvironmentObject var user: UserModel
     
-    var coins: Int = 100
     var progress: Double = 0.65
     var level: Int = 12
-    var backdrop: Color = .gray.opacity(0.60)
+    var backdrop: Color = .gray
     
     var body: some View {
         HStack{
@@ -42,7 +41,7 @@ struct UserBar: View {
                 }
                 
                 //Coin Value
-                Text("\(coins)")
+                Text("\(user.coins)")
                     .font(.subheadline)
                     .foregroundColor(.black)
                     .padding(.horizontal)
@@ -74,7 +73,7 @@ struct UserBar: View {
                         .frame(width: 50, height: 50)
                     
                     // Profile Picture
-                    ProfileImageView(profileURL: user.profile, size: 40)
+                    ProfileImageView(profileURL: user.profile, size: 46)
                 }
                 // Level pill
                 Text("Lv \(level)")

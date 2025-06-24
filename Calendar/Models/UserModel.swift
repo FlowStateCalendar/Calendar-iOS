@@ -20,7 +20,9 @@ final class UserModel: ObservableObject, Identifiable, Codable {
     @Published var createdAt: Date
     @Published var tasks: [TaskModel]
     @Published var events: [EventModel]
-    //var preferences: UserPreferences
+    @Published var xp: Int
+    @Published var coins: Int
+//    var preferences: UserPreferences
     
     // MARK: - Computed Properties
 //    var activeTasks: [TaskModel] {
@@ -41,6 +43,8 @@ final class UserModel: ObservableObject, Identifiable, Codable {
         self.createdAt = Date()
         self.tasks = []
         self.events = []
+        self.xp = 0
+        self.coins = 0
 //        self.preferences = UserPreferences()
     }
     
@@ -61,6 +65,8 @@ final class UserModel: ObservableObject, Identifiable, Codable {
         self.profile = nil
         self.tasks = []
         self.events = []
+        self.xp = 0
+        self.coins = 0
     }
     
 //    func updateTask(_ task: TaskModel) {
@@ -74,7 +80,7 @@ final class UserModel: ObservableObject, Identifiable, Codable {
 
     // MARK: - Codable
     enum CodingKeys: String, CodingKey {
-        case id, name, email, profile, createdAt, tasks, events
+        case id, name, email, profile, createdAt, tasks, events, xp, coins
     }
 
     required init(from decoder: Decoder) throws {
@@ -86,6 +92,8 @@ final class UserModel: ObservableObject, Identifiable, Codable {
         createdAt = try container.decode(Date.self, forKey: .createdAt)
         tasks = try container.decode([TaskModel].self, forKey: .tasks)
         events = try container.decode([EventModel].self, forKey: .events)
+        xp = try container.decode(Int.self, forKey: .xp)
+        coins = try container.decode(Int.self, forKey: .coins)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -97,6 +105,8 @@ final class UserModel: ObservableObject, Identifiable, Codable {
         try container.encode(createdAt, forKey: .createdAt)
         try container.encode(tasks, forKey: .tasks)
         try container.encode(events, forKey: .events)
+        try container.encode(xp, forKey: .xp)
+        try container.encode(coins, forKey: .coins)
     }
 }
 

@@ -55,6 +55,7 @@ struct Login: View {
 //
            Button {
                // Perform login and switch view
+               TaskManager.assignSampleTasks(to: user)
                appState.isLoggedIn = true
                print("Login tapped")
            } label: {
@@ -94,6 +95,7 @@ struct Login: View {
                 print(result.user.profile?.email ?? "InvalidEmail")
                 print(result.user.profile?.imageURL(withDimension: 200) ?? "InvalidImageURL")
                 
+                TaskManager.assignSampleTasks(to: user)
                 appState.isLoggedIn = true
             }
         }

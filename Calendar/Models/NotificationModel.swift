@@ -23,7 +23,7 @@ enum NotificationType: String, Codable, CaseIterable {
 
 // MARK: - Notification Type
 enum NotificationSound: String, Codable, CaseIterable {
-    case defaultSound = "default"
+    case defaultSound = "default"	
     case chime = "chime.caf"
     case alert = "alert.caf"
     // Add more as needed

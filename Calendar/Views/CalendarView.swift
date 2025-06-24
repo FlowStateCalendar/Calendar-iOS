@@ -86,10 +86,12 @@ struct CalendarView: View {
                 MonthView(viewModel: viewModel)
             }
             
+            AddTaskButton()
+            
             Spacer()
         }
         .padding()
-        .background(Color(.teal))
+        .background(Image("fishBackground").resizable().edgesIgnoringSafeArea(.all))
         .onAppear {
             if !hasInitializedDate {
                 viewModel.currentDate = Date()

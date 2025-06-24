@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct AddTaskButton: View {
+    @State private var showNewTaskView = false
+    
     var body: some View {
         HStack {
             Spacer()
@@ -17,7 +19,7 @@ struct AddTaskButton: View {
                 .foregroundColor(.black)
 
             Button(action: {
-                // Add task action here
+                showNewTaskView = true
             }) {
                 Circle()
                     .fill(Color.gray.opacity(0.80))
@@ -30,6 +32,9 @@ struct AddTaskButton: View {
             }
         }
         .padding(.horizontal)
+        .fullScreenCover(isPresented: $showNewTaskView) {
+            NewTaskView()
+        }
     }
 }
 

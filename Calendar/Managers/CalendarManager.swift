@@ -32,16 +32,15 @@ class CalendarManager {
         
         // Use task.frequency
         let frequency = task.frequency
-        let eventLength: TimeInterval = 60 * 60 // Default 1 hour, adjust as needed
         
         if frequency == .none {
             // One-off event
-            let event = EventModel(from: task, scheduledDate: startDate, length: eventLength)
+            let event = EventModel(from: task, scheduledDate: startDate)
             events.append(event)
         } else {
             // Recurring events
             while currentDate <= endDate {
-                let event = EventModel(from: task, scheduledDate: currentDate, length: eventLength)
+                let event = EventModel(from: task, scheduledDate: currentDate)
                 events.append(event)
                 if let next = nextDate(from: currentDate, frequency: frequency) {
                     currentDate = next

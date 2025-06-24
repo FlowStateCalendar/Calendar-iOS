@@ -32,6 +32,26 @@ enum TaskCategory: String, CaseIterable, Codable {
         case .other: return "folder"
         }
     }
+    
+    var iconName: String {
+        switch self {
+        case .work: return "briefcase"
+        case .health: return "heart"
+        case .personal: return "person"
+        case .study: return "book"
+        case .other: return "folder"
+        }
+    }
+    
+    var filledIconName: String {
+        switch self {
+        case .work: return "briefcase.fill"
+        case .health: return "heart.fill"
+        case .personal: return "person.fill"
+        case .study: return "book.fill"
+        case .other: return "folder.fill"
+        }
+    }
 }
 
 enum TaskFrequency: String, CaseIterable, Codable {
@@ -44,6 +64,7 @@ final class TaskModel: ObservableObject, Identifiable, Codable {
     let id: UUID
     @Published var name: String
     @Published var taskDescription: String
+    @Published var lengthMins: TimeInterval
     @Published var category: TaskCategory
     @Published var frequency: TaskFrequency
     @Published var energy: Int {
@@ -52,8 +73,7 @@ final class TaskModel: ObservableObject, Identifiable, Codable {
             energy = min(max(energy, 1), 5)
         }
     }
-//    var notificationType: NotificationType
-//    var notificationFrequency: NotificationFrequency
+//    var notifications: NotificationModel
     @Published var taskDate: Date
     
     // MARK: - Computed Properties
@@ -72,6 +92,7 @@ final class TaskModel: ObservableObject, Identifiable, Codable {
     init(
         name: String,
         description: String = "",
+        lengthMins: TimeInterval = 0,
         frequency: TaskFrequency,
         category: TaskCategory = .other,
         energy: Int,
@@ -82,6 +103,7 @@ final class TaskModel: ObservableObject, Identifiable, Codable {
         self.id = UUID()
         self.name = name
         self.taskDescription = description
+        self.lengthMins = lengthMins
         self.frequency = frequency
         self.category = category
         self.energy = min(max(energy, 1), 5) // Ensure valid range
@@ -92,7 +114,7 @@ final class TaskModel: ObservableObject, Identifiable, Codable {
     
     // MARK: - Codable
     enum CodingKeys: String, CodingKey {
-        case id, name, taskDescription, category, frequency, energy, taskDate
+        case id, name, taskDescription, lengthMins, category, frequency, energy, taskDate
     }
 
     required init(from decoder: Decoder) throws {
@@ -100,6 +122,7 @@ final class TaskModel: ObservableObject, Identifiable, Codable {
         id = try container.decode(UUID.self, forKey: .id)
         name = try container.decode(String.self, forKey: .name)
         taskDescription = try container.decode(String.self, forKey: .taskDescription)
+        lengthMins = try container.decode(TimeInterval.self, forKey: .lengthMins)
         category = try container.decode(TaskCategory.self, forKey: .category)
         frequency = try container.decode(TaskFrequency.self, forKey: .frequency)
         energy = try container.decode(Int.self, forKey: .energy)
@@ -111,6 +134,7 @@ final class TaskModel: ObservableObject, Identifiable, Codable {
         try container.encode(id, forKey: .id)
         try container.encode(name, forKey: .name)
         try container.encode(taskDescription, forKey: .taskDescription)
+        try container.encode(lengthMins, forKey: .lengthMins)
         try container.encode(category, forKey: .category)
         try container.encode(frequency, forKey: .frequency)
         try container.encode(energy, forKey: .energy)
