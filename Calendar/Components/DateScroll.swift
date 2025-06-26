@@ -82,7 +82,7 @@ struct HorizontalDateSelector<Item: DateSelectable>: View {
                         proxy.scrollTo(selected.id, anchor: .center)
                     }
                 }
-                .onChange(of: selected.id) { _ in
+                .onChange(of: selected.id) {
                     // Scroll to selected when changed
                     withAnimation {
                         proxy.scrollTo(selected.id, anchor: .center)
