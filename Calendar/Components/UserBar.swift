@@ -10,8 +10,6 @@ import SwiftUI
 struct UserBar: View {
     @EnvironmentObject var user: UserModel
     
-    var progress: Double = 0.65
-    var level: Int = 12
     var backdrop: Color = .gray
     
     var body: some View {
@@ -67,7 +65,7 @@ struct UserBar: View {
                         .frame(width: 50, height: 50)
                     
                     Circle()
-                        .trim(from: 0, to: progress)
+                        .trim(from: 0, to: user.levelProgress)
                         .stroke(Color.green, lineWidth: 4)
                         .rotationEffect(.degrees(-90))
                         .frame(width: 50, height: 50)
@@ -76,7 +74,7 @@ struct UserBar: View {
                     ProfileImageView(profileURL: user.profile, size: 46)
                 }
                 // Level pill
-                Text("Lv \(level)")
+                Text("Lv \(user.level)")
                     .font(.caption)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 2)

@@ -21,8 +21,30 @@ final class UserModel: ObservableObject, Identifiable, Codable {
     @Published var tasks: [TaskModel]
     @Published var events: [EventModel]
     @Published var xp: Int
+    @Published var level: Int // User's current level
     @Published var coins: Int
 //    var preferences: UserPreferences
+    
+    // MARK: - XP/Level System
+    /// Returns the XP required to reach the next level (exponential curve)
+    func requiredXP(for level: Int) -> Int {
+        let baseXP = 100
+        let growthFactor = 1.14
+        return Int(Double(baseXP) * pow(growthFactor, Double(level - 1)))
+    }
+    /// Adds XP and handles level up logic
+    func addXP(_ amount: Int) {
+        xp += amount
+        while xp >= requiredXP(for: level) {
+            xp -= requiredXP(for: level)
+            level += 1
+            // Optionally: trigger level up notification here
+        }
+    }
+    /// Progress to next level (0.0 - 1.0)
+    var levelProgress: Double {
+        Double(xp) / Double(requiredXP(for: level))
+    }
     
     // MARK: - Computed Properties
 //    var activeTasks: [TaskModel] {
@@ -44,6 +66,7 @@ final class UserModel: ObservableObject, Identifiable, Codable {
         self.tasks = []
         self.events = []
         self.xp = 0
+        self.level = 1
         self.coins = 0
 //        self.preferences = UserPreferences()
     }
@@ -80,7 +103,7 @@ final class UserModel: ObservableObject, Identifiable, Codable {
 
     // MARK: - Codable
     enum CodingKeys: String, CodingKey {
-        case id, name, email, profile, createdAt, tasks, events, xp, coins
+        case id, name, email, profile, createdAt, tasks, events, xp, level, coins
     }
 
     required init(from decoder: Decoder) throws {
@@ -93,6 +116,7 @@ final class UserModel: ObservableObject, Identifiable, Codable {
         tasks = try container.decode([TaskModel].self, forKey: .tasks)
         events = try container.decode([EventModel].self, forKey: .events)
         xp = try container.decode(Int.self, forKey: .xp)
+        level = try container.decodeIfPresent(Int.self, forKey: .level) ?? 1
         coins = try container.decode(Int.self, forKey: .coins)
     }
 
@@ -106,6 +130,7 @@ final class UserModel: ObservableObject, Identifiable, Codable {
         try container.encode(tasks, forKey: .tasks)
         try container.encode(events, forKey: .events)
         try container.encode(xp, forKey: .xp)
+        try container.encode(level, forKey: .level)
         try container.encode(coins, forKey: .coins)
     }
 }
