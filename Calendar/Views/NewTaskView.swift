@@ -12,7 +12,10 @@ struct NewTaskView: View {
     @EnvironmentObject var user: UserModel
     @Environment(\.dismiss) private var dismiss
     
-    // State for task fields
+    // Optional task for editing mode
+    let taskToEdit: TaskModel?
+    
+    // State for task fields - initialize with empty/default values
     @State private var name: String = ""
     @State private var descriptionText: String = ""
     @State private var category: TaskCategory = .other
@@ -34,8 +37,17 @@ struct NewTaskView: View {
     @State private var showValidationAlert = false
     @State private var validationMessage = ""
     
+    // Date and time selection popups
+    @State private var showDatePicker = false
+    @State private var showTimePicker = false
+    
     enum EditingAspect {
         case name, description, category, energy, length, frequency, date
+    }
+    
+    // MARK: - Computed Properties
+    private var isEditingMode: Bool {
+        taskToEdit != nil
     }
     
     var body: some View {
@@ -59,7 +71,7 @@ struct NewTaskView: View {
                     Spacer()
                 }
                 VStack {
-                    Text("Create New Task")
+                    Text(isEditingMode ? "View Task" : "Create New Task")
                         .font(.largeTitle)
                         .fontWeight(.bold)
                         .padding(.top, 30)
@@ -142,7 +154,7 @@ struct NewTaskView: View {
                                         editingFrequency = frequency
                                     }
                                 // Date
-                                DetailCard(title: "Date", value: date.formatted(date: .abbreviated, time: .omitted), icon: "calendar")
+                                DetailCard(title: "Date & Time", value: date.formatted(date: .abbreviated, time: .shortened), icon: "calendar")
                                     .onTapGesture {
                                         isEditing = true
                                         editingAspect = .date
@@ -153,7 +165,7 @@ struct NewTaskView: View {
                         }
                     }
                     Button(action: createTask) {
-                        Text("Create Task")
+                        Text(isEditingMode ? "Update Task" : "Create Task")
                             .font(.headline)
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
@@ -176,8 +188,26 @@ struct NewTaskView: View {
             
         }
         .background(Image("fishBackground").resizable().edgesIgnoringSafeArea(.all))
+        .onAppear {
+            // Load task data if editing
+            if let task = taskToEdit {
+                name = task.name
+                descriptionText = task.taskDescription
+                category = task.category
+                energy = task.energy
+                length = task.lengthMins
+                frequency = task.frequency
+                date = task.taskDate
+            }
+        }
         .alert(isPresented: $showValidationAlert) {
             Alert(title: Text("Invalid Task"), message: Text(validationMessage), dismissButton: .default(Text("OK")))
+        }
+        .sheet(isPresented: $showDatePicker) {
+            datePickerSheet
+        }
+        .sheet(isPresented: $showTimePicker) {
+            timePickerSheet
         }
     }
     
@@ -363,11 +393,66 @@ struct NewTaskView: View {
     @ViewBuilder
     private var dateEditingView: some View {
         VStack(spacing: 16) {
-            Text("Select Date")
+            Text("Select Date & Time")
                 .font(.headline)
-            DatePicker("Task Date", selection: $editingDate, displayedComponents: .date)
-                .datePickerStyle(GraphicalDatePickerStyle())
-                .labelsHidden()
+            
+            VStack(spacing: 20) {
+                // Date selection button
+                Button(action: {
+                    showDatePicker = true
+                }) {
+                    HStack {
+                        Image(systemName: "calendar")
+                            .font(.title2)
+                            .foregroundColor(.accentColor)
+                        
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Date")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            Text(editingDate.formatted(date: .abbreviated, time: .omitted))
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                        }
+                        
+                        Spacer()
+                        
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.secondary)
+                    }
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
+                }
+                
+                // Time selection button
+                Button(action: {
+                    showTimePicker = true
+                }) {
+                    HStack {
+                        Image(systemName: "clock")
+                            .font(.title2)
+                            .foregroundColor(.accentColor)
+                        
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Time")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            Text(editingDate.formatted(date: .omitted, time: .shortened))
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                        }
+                        
+                        Spacer()
+                        
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.secondary)
+                    }
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
+                }
+            }
         }
     }
     
@@ -379,7 +464,7 @@ struct NewTaskView: View {
         case .energy: return "Energy Level"
         case .length: return "Task Length"
         case .frequency: return "Frequency"
-        case .date: return "Date"
+        case .date: return "Date & Time"
         }
     }
     
@@ -424,21 +509,92 @@ struct NewTaskView: View {
             showValidationAlert = true
             return
         }
-        let newTask = TaskModel(
-            name: name,
-            description: descriptionText,
-            lengthMins: length,
-            frequency: frequency,
-            category: category,
-            energy: energy,
-            taskDate: date
-        )
-        user.addTask(newTask)
+        
+        if let existingTask = taskToEdit {
+            // Update existing task
+            existingTask.name = name
+            existingTask.taskDescription = descriptionText
+            existingTask.category = category
+            existingTask.energy = energy
+            existingTask.lengthMins = length
+            existingTask.frequency = frequency
+            existingTask.taskDate = date
+        } else {
+            // Create new task
+            let newTask = TaskModel(
+                name: name,
+                description: descriptionText,
+                lengthMins: length,
+                frequency: frequency,
+                category: category,
+                energy: energy,
+                taskDate: date
+            )
+            user.addTask(newTask)
+        }
+        
         dismiss()
+    }
+    
+    // MARK: - Date and Time Picker Sheets
+    private var datePickerSheet: some View {
+        NavigationView {
+            VStack(spacing: 20) {
+                Text("Select Date")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                    .padding(.top)
+                
+                DatePicker("Task Date", selection: $editingDate, displayedComponents: .date)
+                    .datePickerStyle(GraphicalDatePickerStyle())
+                    .labelsHidden()
+                    .padding()
+                
+                Spacer()
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarItems(
+                leading: Button("Cancel") {
+                    showDatePicker = false
+                },
+                trailing: Button("Done") {
+                    showDatePicker = false
+                }
+            )
+        }
+        .presentationDetents([.medium])
+    }
+    
+    private var timePickerSheet: some View {
+        NavigationView {
+            VStack(spacing: 20) {
+                Text("Select Time")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                    .padding(.top)
+                
+                DatePicker("Task Time", selection: $editingDate, displayedComponents: .hourAndMinute)
+                    .datePickerStyle(WheelDatePickerStyle())
+                    .labelsHidden()
+                    .padding()
+                
+                Spacer()
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarItems(
+                leading: Button("Cancel") {
+                    showTimePicker = false
+                },
+                trailing: Button("Done") {
+                    showTimePicker = false
+                }
+            )
+        }
+        .presentationDetents([.medium])
     }
 }
 
 #Preview {
-    NewTaskView()
+    NewTaskView(taskToEdit: TaskModel.sampleTasks.first)
         .environmentObject(UserModel(name: "Test User", email: "test@example.com"))
 }

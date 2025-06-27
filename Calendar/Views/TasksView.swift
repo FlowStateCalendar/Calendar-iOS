@@ -9,7 +9,6 @@ import SwiftUI
 
 struct TasksView: View {
     @EnvironmentObject var user: UserModel
-    @State private var showInspectTaskView = false
     @State private var selectedTask: TaskModel?
     // Combine sample tasks and user tasks, removing duplicates by id
     var allTasks: [TaskModel] {
@@ -81,7 +80,6 @@ struct TasksView: View {
                                 }
                                 .onTapGesture {
                                     selectedTask = task
-                                    showInspectTaskView = true
                                 }
                             }
                         }
@@ -100,16 +98,9 @@ struct TasksView: View {
             Spacer()
         }
         .background(Image("fishBackground").resizable().edgesIgnoringSafeArea(.all))
-        .fullScreenCover(isPresented: $showInspectTaskView) {
-            if let task = selectedTask {
-                // Find the task in the appropriate array and pass a binding
-                if let userTaskIndex = user.tasks.firstIndex(where: { $0.id == task.id }) {
-                    InspectTaskView(task: $user.tasks[userTaskIndex])
-                } else {
-                    // If it's a sample task, we can't modify it, so show a read-only version
-                    InspectTaskView(task: .constant(task))
-                }
-            }
+        .fullScreenCover(item: $selectedTask) { task in
+            NewTaskView(taskToEdit: task)
+                .environmentObject(user)
         }
     }
 }
