@@ -15,7 +15,7 @@ class CalendarViewModel: ObservableObject {
     @Published var scope: CalendarScope = .month
     
     // MARK: - Computed Properties for Titles
-    
+     
     var currentTitle: String {
         switch scope {
         case .day:
@@ -68,7 +68,7 @@ class CalendarViewModel: ObservableObject {
     
     func generateMonthDays() -> [CalendarDay] {
         guard
-            let monthInterval = calendar.dateInterval(of: .month, for: currentDate),
+            calendar.dateInterval(of: .month, for: currentDate) != nil,
             let firstDayOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: currentDate)),
             let lastDayOfMonth = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: firstDayOfMonth)
         else { return [] }

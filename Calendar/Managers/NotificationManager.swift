@@ -96,6 +96,29 @@ class NotificationManager {
             }
         }
     }
+    
+    // Send a simple "Hello World" notification immediately
+    func sendHelloWorldNotification() {
+        let content = UNMutableNotificationContent()
+        content.title = "Hello World!"
+        content.body = "This is a test notification from your calendar app."
+        content.sound = .default
+        
+        // Create a trigger that fires immediately (in 1 second)
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+        
+        // Create unique identifier
+        let identifier = "hello_world_\(UUID().uuidString)"
+        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+        
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("Error sending Hello World notification: \(error)")
+            } else {
+                print("Hello World notification sent successfully!")
+            }
+        }
+    }
 }
 
 // Example usage:

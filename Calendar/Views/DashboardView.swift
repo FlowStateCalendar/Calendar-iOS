@@ -33,6 +33,22 @@ struct DashboardView: View {
                 .padding(.vertical, 8)
                 .background(Color.red.opacity(0.8))
                 .cornerRadius(8)
+                
+                Button("Hello World Notification") {
+                    NotificationManager.shared.requestNotificationPermission { granted in
+                        if granted {
+                            NotificationManager.shared.sendHelloWorldNotification()
+                        } else {
+                            print("Notification permission denied")
+                        }
+                    }
+                }
+                .foregroundColor(.white)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(Color.blue.opacity(0.8))
+                .cornerRadius(8)
+                .padding(.top, 8)
 
                 // Today's Tasks Section
                 ZStack {

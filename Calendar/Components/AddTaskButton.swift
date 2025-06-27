@@ -19,6 +19,7 @@ struct AddTaskButton: View {
                 .foregroundColor(.black)
 
             Button(action: {
+                print("Open new task view")
                 showNewTaskView = true
             }) {
                 Circle()
@@ -33,7 +34,7 @@ struct AddTaskButton: View {
         }
         .padding(.horizontal)
         .fullScreenCover(isPresented: $showNewTaskView) {
-            NewTaskView()
+            NewTaskView(taskToEdit: nil)
         }
     }
 }
