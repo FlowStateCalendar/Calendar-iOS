@@ -8,6 +8,20 @@
 import SwiftUI
 import Combine
 
+// Move these to the top-level, above NewTaskView:
+enum NotificationTypeOption: String, CaseIterable, Identifiable {
+    case none = "No Reminders"
+    case one = "One Reminder"
+    case multiple = "Multiple Reminders"
+    var id: String { rawValue }
+}
+
+struct NotificationTimingConfig: Identifiable, Hashable {
+    let id = UUID()
+    var minutesBefore: Int = 15
+    var sound: NotificationSound = .defaultSound
+}
+
 struct NewTaskView: View {
     @EnvironmentObject var user: UserModel
     @Environment(\.dismiss) private var dismiss
@@ -41,8 +55,12 @@ struct NewTaskView: View {
     @State private var showDatePicker = false
     @State private var showTimePicker = false
     
+    // Add state for notification configuration at the top of NewTaskView:
+    @State private var notificationType: NotificationTypeOption = .none
+    @State private var notificationTimings: [NotificationTimingConfig] = [NotificationTimingConfig()]
+    
     enum EditingAspect {
-        case name, description, category, energy, length, frequency, date
+        case name, description, category, energy, length, frequency, date, notifications
     }
     
     // MARK: - Computed Properties
@@ -50,31 +68,50 @@ struct NewTaskView: View {
         taskToEdit != nil
     }
     
+    // Real-time reward calculations
+    private var calculatedXP: Int {
+        RewardCalculator.xp(for: createTaskModel())
+    }
+    
+    private var calculatedCoins: Int {
+        RewardCalculator.coins(for: createTaskModel())
+    }
+    
+    // MARK: - Dismiss Action
+    private func dismissView() {
+        withAnimation(.easeInOut(duration: 0.3)) {
+            dismiss()
+        }
+    }
+    
     var body: some View {
-        VStack {
-            UserBar()
-            ZStack {
-                VStack {
-                    HStack {
-                        Spacer()
-                        Button(action: { dismiss() }) {
-                            Circle()
-                                .fill(Color.gray.opacity(0.80))
-                                .frame(width: 30, height: 30)
-                                .overlay(
-                                    Image(systemName: "xmark")
-                                        .font(.system(size: 16, weight: .bold))
-                                        .foregroundColor(.black)
-                                )
-                        }
-                    }
+        GeometryReader { geometry in
+            VStack(spacing: 20) {
+                // Header with close button
+                HStack {
                     Spacer()
+                    Button(action: { dismissView() }) {
+                        Circle()
+                            .fill(Color.gray.opacity(0.80))
+                            .frame(width: 30, height: 30)
+                            .overlay(
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 16, weight: .bold))
+                                    .foregroundColor(.black)
+                            )
+                    }
                 }
-                VStack {
+                .padding(.horizontal, 20)
+                .padding(.top, 10)
+                
+                // Main content
+                VStack(spacing: 20) {
+                    // Header
                     Text(isEditingMode ? "View Task" : "Create New Task")
-                        .font(.largeTitle)
+                        .font(.title)
                         .fontWeight(.bold)
-                        .padding(.top, 30)
+                        .padding(.top, 10)
+                    
                     if isEditing {
                         VStack(spacing: 20) {
                             // Header always visible
@@ -104,7 +141,6 @@ struct NewTaskView: View {
                             .background(Color(.systemGray6))
                             .cornerRadius(15)
                         }
-                        .padding()
                     } else {
                         ScrollView {
                             VStack(spacing: 20) {
@@ -160,10 +196,20 @@ struct NewTaskView: View {
                                         editingAspect = .date
                                         editingDate = date
                                     }
+                                // Notifications
+                                DetailCard(title: "Notifications", value: "Tap to configure", icon: "bell")
+                                    .onTapGesture {
+                                        isEditing = true
+                                        editingAspect = .notifications
+                                    }
                             }
-                            .padding()
+                            .padding(.horizontal, 10)
                         }
                     }
+                    
+                    Spacer()
+                    
+                    // Create/Update button
                     Button(action: createTask) {
                         Text(isEditingMode ? "Update Task" : "Create Task")
                             .font(.headline)
@@ -172,22 +218,21 @@ struct NewTaskView: View {
                             .padding()
                             .background(Color.accentColor)
                             .cornerRadius(12)
-                            .padding(.horizontal, 20)
-                            .padding(.bottom, 10)
                     }
+                    .padding(.bottom, 10)
                 }
+                .padding(.horizontal, 20)
             }
-            .background {
-                UnevenRoundedRectangle(
-                    topLeadingRadius: 20,
-                    topTrailingRadius: 20
-                )
-                .fill(.gray)
-                .ignoresSafeArea()
-            }
-            
         }
-        .background(Image("fishBackground").resizable().edgesIgnoringSafeArea(.all))
+        .alert(isPresented: $showValidationAlert) {
+            Alert(title: Text("Invalid Task"), message: Text(validationMessage), dismissButton: .default(Text("OK")))
+        }
+        .sheet(isPresented: $showDatePicker) {
+            datePickerSheet
+        }
+        .sheet(isPresented: $showTimePicker) {
+            timePickerSheet
+        }
         .onAppear {
             // Load task data if editing
             if let task = taskToEdit {
@@ -200,33 +245,56 @@ struct NewTaskView: View {
                 date = task.taskDate
             }
         }
-        .alert(isPresented: $showValidationAlert) {
-            Alert(title: Text("Invalid Task"), message: Text(validationMessage), dismissButton: .default(Text("OK")))
-        }
-        .sheet(isPresented: $showDatePicker) {
-            datePickerSheet
-        }
-        .sheet(isPresented: $showTimePicker) {
-            timePickerSheet
-        }
     }
     
     // MARK: - Task Header
     private var taskHeader: some View {
         VStack(spacing: 16) {
             HStack {
-                Image(systemName: category.filledIconName)
-                    .font(.system(size: 40))
-                    .foregroundColor(.accentColor)
-                Spacer()
-                HStack(spacing: 4) {
-                    ForEach(1...5, id: \.self) { i in
-                        Image(systemName: i <= energy ? "bolt.fill" : "bolt")
-                            .foregroundColor(i <= energy ? .yellow : .gray)
+                // Left side: Category and Energy
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Image(systemName: category.filledIconName)
                             .font(.system(size: 24))
+                            .foregroundColor(.accentColor)
+                        Text(category.displayName)
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                    }
+                    
+                    HStack(spacing: 4) {
+                        ForEach(1...5, id: \.self) { i in
+                            Image(systemName: i <= energy ? "bolt.fill" : "bolt")
+                                .foregroundColor(i <= energy ? .yellow : .gray)
+                                .font(.system(size: 16))
+                        }
+                    }
+                }
+                
+                Spacer()
+                
+                // Right side: XP and Coins
+                VStack(alignment: .trailing, spacing: 8) {
+                    HStack {
+                        Image(systemName: "star.fill")
+                            .font(.system(size: 16))
+                            .foregroundColor(.orange)
+                        Text("\(calculatedXP)")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                    }
+                    
+                    HStack {
+                        Image(systemName: "dollarsign.ring")
+                            .font(.system(size: 16))
+                            .foregroundColor(.yellow)
+                        Text("\(calculatedCoins)")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
                     }
                 }
             }
+            
             Text(name.isEmpty ? "Task Name" : name)
                 .font(.title)
                 .fontWeight(.semibold)
@@ -235,6 +303,19 @@ struct NewTaskView: View {
         .padding()
         .background(Color(.systemGray6))
         .cornerRadius(15)
+    }
+    
+    // Helper function to create a temporary task model for reward calculation
+    private func createTaskModel() -> TaskModel {
+        return TaskModel(
+            name: name.isEmpty ? "Task" : name,
+            description: descriptionText,
+            lengthMins: length,
+            frequency: frequency,
+            category: category,
+            energy: energy,
+            taskDate: date
+        )
     }
     
     // MARK: - Editing Interface
@@ -255,6 +336,8 @@ struct NewTaskView: View {
             frequencyEditingView
         case .date:
             dateEditingView
+        case .notifications:
+            notificationsEditingView
         }
     }
     
@@ -456,6 +539,94 @@ struct NewTaskView: View {
         }
     }
     
+    @ViewBuilder
+    private var notificationsEditingView: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            Text("Notifications")
+                .font(.title2)
+                .fontWeight(.semibold)
+                .padding(.top)
+
+            // Picker for notification type with label
+            HStack {
+                Text("Reminder Frequency:")
+                    .font(.headline)
+                Picker("Type", selection: $notificationType) {
+                    ForEach(NotificationTypeOption.allCases) { type in
+                        Text(type.rawValue).tag(type)
+                    }
+                }
+                .pickerStyle(MenuPickerStyle())
+            }
+            .onChange(of: notificationType) {
+                switch notificationType {
+                case .none:
+                    notificationTimings = []
+                case .one:
+                    if notificationTimings.isEmpty {
+                        notificationTimings = [NotificationTimingConfig()]
+                    } else if notificationTimings.count > 1 {
+                        notificationTimings = [notificationTimings.first!]
+                    }
+                case .multiple:
+                    if notificationTimings.isEmpty {
+                        notificationTimings = [NotificationTimingConfig()]
+                    }
+                }
+            }
+            .padding(.bottom, 4)
+
+            if notificationType == .none {
+                Text("No reminders will be sent for this task.")
+                    .foregroundColor(.secondary)
+                    .padding(.top, 8)
+            } else {
+                VStack(alignment: .leading, spacing: 12) {
+                    ForEach($notificationTimings) { $timing in
+                        NotificationTimingRow(
+                            timing: $timing,
+                            canDelete: notificationTimings.count > 1,
+                            onDelete: {
+                                if let idx = notificationTimings.firstIndex(of: timing) {
+                                    notificationTimings.remove(at: idx)
+                                    // If user deletes all, revert to none
+                                    if notificationTimings.isEmpty {
+                                        notificationType = .none
+                                    } else if notificationTimings.count == 1 {
+                                        notificationType = .one
+                                    } else {
+                                        notificationType = .multiple
+                                    }
+                                }
+                            }
+                        )
+                    }
+                    if notificationTimings.count < 5 {
+                        Button(action: {
+                            notificationTimings.append(NotificationTimingConfig())
+                            if notificationTimings.count == 2 {
+                                notificationType = .multiple
+                            } else if notificationTimings.count == 1 {
+                                notificationType = .one
+                            }
+                        }) {
+                            HStack {
+                                Image(systemName: "plus.circle.fill")
+                                Text("Add Reminder")
+                            }
+                        }
+                        .padding(.top, 8)
+                    }
+                }
+            }
+            Spacer()
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(15)
+        .padding()
+    }
+    
     private var editingAspectTitle: String {
         switch editingAspect {
         case .name: return "Name"
@@ -465,6 +636,7 @@ struct NewTaskView: View {
         case .length: return "Task Length"
         case .frequency: return "Frequency"
         case .date: return "Date & Time"
+        case .notifications: return "Notifications"
         }
     }
     
@@ -495,6 +667,9 @@ struct NewTaskView: View {
             frequency = editingFrequency
         case .date:
             date = editingDate
+        case .notifications:
+            // Notifications editing is not implemented in the current version
+            break
         }
     }
     
@@ -510,6 +685,34 @@ struct NewTaskView: View {
             return
         }
         
+        // Build NotificationModel from UI state
+        let notificationModel: NotificationModel = {
+            switch notificationType {
+            case .none:
+                return NotificationModel(frequency: .none, type: .local, sound: .defaultSound, content: "", timings: [])
+            case .one:
+                let timing = notificationTimings.first ?? NotificationTimingConfig()
+                return NotificationModel(
+                    frequency: .once,
+                    type: .local,
+                    sound: timing.sound,
+                    content: "",
+                    timings: [NotificationTiming(minutesBeforeEvent: timing.minutesBefore)]
+                )
+            case .multiple:
+                let timings = notificationTimings.prefix(5).map { NotificationTiming(minutesBeforeEvent: $0.minutesBefore) }
+                // Use the first sound for the model (NotificationModel supports only one sound, but each timing can have its own in the UI)
+                let sound = notificationTimings.first?.sound ?? .defaultSound
+                return NotificationModel(
+                    frequency: .custom,
+                    type: .local,
+                    sound: sound,
+                    content: "",
+                    timings: timings
+                )
+            }
+        }()
+
         if let existingTask = taskToEdit {
             // Update existing task
             existingTask.name = name
@@ -519,6 +722,10 @@ struct NewTaskView: View {
             existingTask.lengthMins = length
             existingTask.frequency = frequency
             existingTask.taskDate = date
+            existingTask.notification = notificationModel
+            
+            // Update the task in the user model to trigger notification updates
+            user.updateTask(existingTask)
         } else {
             // Create new task
             let newTask = TaskModel(
@@ -528,7 +735,8 @@ struct NewTaskView: View {
                 frequency: frequency,
                 category: category,
                 energy: energy,
-                taskDate: date
+                taskDate: date,
+                notification: notificationModel
             )
             user.addTask(newTask)
         }
@@ -597,4 +805,37 @@ struct NewTaskView: View {
 #Preview {
     NewTaskView(taskToEdit: TaskModel.sampleTasks.first)
         .environmentObject(UserModel(name: "Test User", email: "test@example.com"))
+}
+
+// Add NotificationTimingRow view at the bottom of the file:
+struct NotificationTimingRow: View {
+    @Binding var timing: NotificationTimingConfig
+    var canDelete: Bool
+    var onDelete: () -> Void
+
+    var body: some View {
+        HStack(spacing: 16) {
+            Text("Notify")
+            TextField("Minutes", value: $timing.minutesBefore, formatter: NumberFormatter())
+                .keyboardType(.numberPad)
+                .frame(width: 50)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+            Text("min before")
+            Picker("Sound", selection: $timing.sound) {
+                ForEach(NotificationSound.allCases, id: \ .self) { sound in
+                    Text(sound.displayName).tag(sound)
+                }
+            }
+            .pickerStyle(MenuPickerStyle())
+            if canDelete {
+                Button(action: onDelete) {
+                    Image(systemName: "minus.circle.fill")
+                        .foregroundColor(.red)
+                }
+            }
+        }
+        .padding(8)
+        .background(Color(.systemGray5))
+        .cornerRadius(8)
+    }
 }
