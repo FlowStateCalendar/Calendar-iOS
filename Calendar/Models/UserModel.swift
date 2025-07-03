@@ -23,7 +23,14 @@ final class UserModel: ObservableObject, Identifiable, Codable {
     @Published var xp: Int
     @Published var level: Int // User's current level
     @Published var coins: Int
+    @Published var xpEarnedToday: Int // XP earned today (for daily cap)
+    @Published var lastXPAwardDate: Date? // Last date XP was awarded
 //    var preferences: UserPreferences
+    
+    // Combine cancellable for observing events changes
+    private var eventsCancellable: AnyCancellable?
+    // Store previous events for diffing
+    private var previousEvents: [EventModel] = []
     
     // MARK: - XP/Level System
     /// Returns the XP required to reach the next level (exponential curve)
@@ -32,6 +39,24 @@ final class UserModel: ObservableObject, Identifiable, Codable {
         let growthFactor = 1.14
         return Int(Double(baseXP) * pow(growthFactor, Double(level - 1)))
     }
+    
+    /// Awards XP for a completed event, respecting the daily XP cap (default 200 XP/day)
+    func awardXPForEvent(_ event: EventModel, xpCap: Int = 200) {
+        let today = Calendar.current.startOfDay(for: Date())
+        if let lastDate = lastXPAwardDate, Calendar.current.isDate(lastDate, inSameDayAs: today) {
+            // Same day, do nothing
+        } else {
+            // New day, reset
+            xpEarnedToday = 0
+        }
+        let xpToAward = min(RewardCalculator.xp(for: event, completion: event.completionPercentage), xpCap - xpEarnedToday)
+        if xpToAward > 0 {
+            addXP(xpToAward)
+            xpEarnedToday += xpToAward
+            lastXPAwardDate = today
+        }
+    }
+    
     /// Adds XP and handles level up logic
     func addXP(_ amount: Int) {
         xp += amount
@@ -45,6 +70,34 @@ final class UserModel: ObservableObject, Identifiable, Codable {
     var levelProgress: Double {
         Double(xp) / Double(requiredXP(for: level))
     }
+    
+    // MARK: - Coin System
+    /// Awards coins for a completed task (no daily cap)
+    func awardCoinsForTask(_ task: TaskModel) {
+        let coinsToAward = RewardCalculator.coins(for: task)
+        coins += coinsToAward
+    }
+    
+    /// Awards coins for a completed event (no daily cap)
+    func awardCoinsForEvent(_ event: EventModel) {
+        let coinsToAward = RewardCalculator.coins(for: event, completion: event.completionPercentage)
+        coins += coinsToAward
+    }
+    
+    // MARK: - Daily Reward System (commented out)
+    // Uncomment to enable daily bonus for first task completion each day
+    // @Published var lastDailyRewardDate: Date? // Already present for XP, reused for coins
+    // let dailyBonusAmount = 20 // Amount of bonus coins for daily reward
+    // /// Checks and awards daily bonus coins if not already awarded today
+    // func checkAndAwardDailyBonus() {
+    //     let today = Calendar.current.startOfDay(for: Date())
+    //     if lastDailyRewardDate == nil || !Calendar.current.isDate(lastDailyRewardDate!, inSameDayAs: today) {
+    //         coins += dailyBonusAmount
+    //         lastDailyRewardDate = today
+    //         // Optionally: show animation or message here
+    //     }
+    // }
+    // Call checkAndAwardDailyBonus() when a task is completed to trigger the daily bonus
     
     // MARK: - Computed Properties
 //    var activeTasks: [TaskModel] {
@@ -68,7 +121,10 @@ final class UserModel: ObservableObject, Identifiable, Codable {
         self.xp = 0
         self.level = 1
         self.coins = 0
+        self.xpEarnedToday = 0
+        self.lastXPAwardDate = nil
 //        self.preferences = UserPreferences()
+        observeEventsForNotifications()
     }
     
     // MARK: - Task Management
@@ -79,7 +135,24 @@ final class UserModel: ObservableObject, Identifiable, Codable {
     
     func removeTask(_ task: TaskModel) {
         tasks.removeAll { $0.id == task.id }
-        //events.removeAll { $0.taskId == task.id }
+        // Remove associated events and cancel their notifications
+        let eventsToRemove = events.filter { $0.taskId == task.id }
+        for event in eventsToRemove {
+            NotificationManager.shared.cancelNotifications(for: event)
+        }
+        events.removeAll { $0.taskId == task.id }
+    }
+    
+    // Update event notifications when task notification settings change
+    func updateEventNotifications(for task: TaskModel) {
+        for i in events.indices {
+            if events[i].taskId == task.id {
+                // Update the event's notification settings
+                events[i].updateNotification(from: task)
+                // Reschedule notifications for this event
+                NotificationManager.shared.scheduleNotifications(for: events[i], notification: events[i].notification)
+            }
+        }
     }
     
     func logout() {
@@ -92,18 +165,17 @@ final class UserModel: ObservableObject, Identifiable, Codable {
         self.coins = 0
     }
     
-//    func updateTask(_ task: TaskModel) {
-//        if let index = tasks.firstIndex(where: { $0.id == task.id }) {
-//            tasks[index] = task
-//            // Remove old events and regenerate
-//            events.removeAll { $0.taskId == task.id }
-//            generateEventsForTask(task)
-//        }
-//    }
+    func updateTask(_ task: TaskModel) {
+        if let index = tasks.firstIndex(where: { $0.id == task.id }) {
+            tasks[index] = task
+            // Update event notifications for this task
+            updateEventNotifications(for: task)
+        }
+    }
 
     // MARK: - Codable
     enum CodingKeys: String, CodingKey {
-        case id, name, email, profile, createdAt, tasks, events, xp, level, coins
+        case id, name, email, profile, createdAt, tasks, events, xp, level, coins, xpEarnedToday, lastXPAwardDate
     }
 
     required init(from decoder: Decoder) throws {
@@ -118,6 +190,9 @@ final class UserModel: ObservableObject, Identifiable, Codable {
         xp = try container.decode(Int.self, forKey: .xp)
         level = try container.decodeIfPresent(Int.self, forKey: .level) ?? 1
         coins = try container.decode(Int.self, forKey: .coins)
+        xpEarnedToday = try container.decodeIfPresent(Int.self, forKey: .xpEarnedToday) ?? 0
+        lastXPAwardDate = try container.decodeIfPresent(Date.self, forKey: .lastXPAwardDate)
+        observeEventsForNotifications()
     }
 
     func encode(to encoder: Encoder) throws {
@@ -132,6 +207,37 @@ final class UserModel: ObservableObject, Identifiable, Codable {
         try container.encode(xp, forKey: .xp)
         try container.encode(level, forKey: .level)
         try container.encode(coins, forKey: .coins)
+        try container.encode(xpEarnedToday, forKey: .xpEarnedToday)
+        try container.encode(lastXPAwardDate, forKey: .lastXPAwardDate)
+    }
+
+    // Observe events array for changes and schedule/cancel notifications
+    private func observeEventsForNotifications() {
+        eventsCancellable = $events
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] newEvents in
+                self?.handleEventNotifications(newEvents: newEvents)
+            }
+    }
+
+    // Handle scheduling/cancelling notifications based on event changes
+    private func handleEventNotifications(newEvents: [EventModel]) {
+        let now = Date()
+        let thirtyDaysFromNow = Calendar.current.date(byAdding: .day, value: 30, to: now) ?? now
+        // Only consider events within the next 30 days
+        let upcomingEvents = newEvents.filter { $0.scheduledDate >= now && $0.scheduledDate <= thirtyDaysFromNow }
+        let previousUpcomingEvents = previousEvents.filter { $0.scheduledDate >= now && $0.scheduledDate <= thirtyDaysFromNow }
+        // Cancel notifications for removed events
+        let removedEvents = previousUpcomingEvents.filter { !upcomingEvents.contains($0) }
+        for event in removedEvents {
+            NotificationManager.shared.cancelNotifications(for: event)
+        }
+        // Schedule notifications for new events using the inherited notification settings
+        for event in upcomingEvents {
+            NotificationManager.shared.scheduleNotifications(for: event, notification: event.notification)
+        }
+        // Update previousEvents
+        previousEvents = newEvents
     }
 }
 

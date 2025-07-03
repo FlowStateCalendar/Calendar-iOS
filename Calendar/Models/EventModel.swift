@@ -13,13 +13,16 @@ struct EventModel: Identifiable, Codable, Hashable {
     let id: UUID
     let taskId: UUID
     let taskName: String
-    let scheduledDate: Date
-    let length: TimeInterval // in seconds
+    var scheduledDate: Date
+    var length: TimeInterval // in seconds
     var completionPercentage: Double // 0.0 to 1.0
     let energy: Int
     let taskCategory: TaskCategory
-    // Placeholder for future notification model
-//    var notification: NotificationModel?
+    let frequency: TaskFrequency
+    // Store the inherited notification settings from the task
+    var notification: NotificationModel
+    var baseXP: Int
+    var baseCoins: Int
 
     init(from task: TaskModel, scheduledDate: Date) {
         self.id = UUID()
@@ -30,27 +33,41 @@ struct EventModel: Identifiable, Codable, Hashable {
         self.completionPercentage = 0.0
         self.energy = task.energy
         self.taskCategory = task.category
-//        self.notification = nil // For future use
+        self.frequency = task.frequency
+        self.notification = task.notification
+        // Inherit base reward values from the task
+        self.baseXP = RewardCalculator.baseXP(rewardFrequency: task.frequency, rewardEnergy: task.energy)
+        self.baseCoins = RewardCalculator.baseCoins(rewardFrequency: task.frequency, rewardEnergy: task.energy)
     }
     
-//    mutating func markCompleted() {
-//        isCompleted = true
-//        completedAt = Date()
-//    }
-    
-//    var isOverdue: Bool {
-//        !isCompleted && scheduledDate < Date()
-//    }
+    // Update notification settings (useful when task notification settings change)
+    mutating func updateNotification(from task: TaskModel) {
+        self.notification = task.notification
+    }
     
     var isToday: Bool {
         Calendar.current.isDateInToday(scheduledDate)
     }
     
-    func isCompleted() -> Bool {
-        if completionPercentage == 1.0 {
-            return true
-        } else { return false }
+    // Returns true if the event is fully completed
+    var isComplete: Bool {
+        completionPercentage == 1.0
     }
+    // Returns true if the event has not been started
+    var isUnstarted: Bool {
+        completionPercentage == 0.0
+    }
+    
+    @available(*, deprecated, message: "Use the isComplete property instead.")
+    func isCompleted() -> Bool {
+        return isComplete
+    }
+}
+
+extension EventModel: Rewardable {
+    var rewardFrequency: TaskFrequency { self.frequency }
+    var rewardEnergy: Int { self.energy }
+    var rewardLength: TimeInterval { self.length }
 }
 
 
