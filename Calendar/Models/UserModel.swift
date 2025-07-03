@@ -57,6 +57,23 @@ final class UserModel: ObservableObject, Identifiable, Codable {
         }
     }
     
+    /// Awards XP for a completed task, respecting the daily XP cap (default 200 XP/day)
+    func awardXPForTask(_ task: TaskModel, xpCap: Int = 200) {
+        let today = Calendar.current.startOfDay(for: Date())
+        if let lastDate = lastXPAwardDate, Calendar.current.isDate(lastDate, inSameDayAs: today) {
+            // Same day, do nothing
+        } else {
+            // New day, reset
+            xpEarnedToday = 0
+        }
+        let xpToAward = min(RewardCalculator.xp(for: task), xpCap - xpEarnedToday)
+        if xpToAward > 0 {
+            addXP(xpToAward)
+            xpEarnedToday += xpToAward
+            lastXPAwardDate = today
+        }
+    }
+    
     /// Adds XP and handles level up logic
     func addXP(_ amount: Int) {
         xp += amount
@@ -141,6 +158,12 @@ final class UserModel: ObservableObject, Identifiable, Codable {
             NotificationManager.shared.cancelNotifications(for: event)
         }
         events.removeAll { $0.taskId == task.id }
+    }
+    
+    func removeEvent(_ event: EventModel) {
+        // Remove the specific event and cancel its notifications
+        NotificationManager.shared.cancelNotifications(for: event)
+        events.removeAll { $0.id == event.id }
     }
     
     // Update event notifications when task notification settings change

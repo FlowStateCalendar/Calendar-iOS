@@ -420,6 +420,7 @@ extension DateFormatter {
 // MARK: - Edit EventModel Popup
 struct EditEventModelPopup: View {
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var user: UserModel
     @State var event: EventModel
     var onDismiss: () -> Void
 
@@ -431,6 +432,7 @@ struct EditEventModelPopup: View {
     @State private var validationMessage = ""
     @State private var showDatePicker = false
     @State private var showTimePicker = false
+    @State private var showDeleteAlert = false
 
     enum EditingAspect {
         case date, length
@@ -441,7 +443,20 @@ struct EditEventModelPopup: View {
             VStack(spacing: 20) {
                 // Header with close button
                 HStack {
+                    // Delete button
+                    Button(action: { showDeleteAlert = true }) {
+                        Circle()
+                            .fill(Color.red.opacity(0.80))
+                            .frame(width: 30, height: 30)
+                            .overlay(
+                                Image(systemName: "trash")
+                                    .font(.system(size: 16, weight: .bold))
+                                    .foregroundColor(.white)
+                            )
+                    }
+                    
                     Spacer()
+                    
                     Button(action: { dismiss(); onDismiss() }) {
                         Circle()
                             .fill(Color.gray.opacity(0.80))
@@ -541,6 +556,14 @@ struct EditEventModelPopup: View {
         .alert(isPresented: $showValidationAlert) {
             Alert(title: Text("Invalid Event"), message: Text(validationMessage), dismissButton: .default(Text("OK")))
         }
+        .alert("Delete Event", isPresented: $showDeleteAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) {
+                deleteEvent()
+            }
+        } message: {
+            Text("Are you sure you want to delete this event? This action cannot be undone.")
+        }
         .sheet(isPresented: $showDatePicker) {
             datePickerSheet
         }
@@ -599,6 +622,12 @@ struct EditEventModelPopup: View {
             return
         }
         // Save changes to the event (in-memory only for now)
+        dismiss()
+        onDismiss()
+    }
+
+    private func deleteEvent() {
+        user.removeEvent(event)
         dismiss()
         onDismiss()
     }

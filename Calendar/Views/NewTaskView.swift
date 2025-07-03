@@ -50,6 +50,7 @@ struct NewTaskView: View {
     
     @State private var showValidationAlert = false
     @State private var validationMessage = ""
+    @State private var showDeleteAlert = false
     
     // Date and time selection popups
     @State private var showDatePicker = false
@@ -89,7 +90,22 @@ struct NewTaskView: View {
             VStack(spacing: 20) {
                 // Header with close button
                 HStack {
+                    // Delete button (only show when editing an existing task)
+                    if isEditingMode {
+                        Button(action: { showDeleteAlert = true }) {
+                            Circle()
+                                .fill(Color.red.opacity(0.80))
+                                .frame(width: 30, height: 30)
+                                .overlay(
+                                    Image(systemName: "trash")
+                                        .font(.system(size: 16, weight: .bold))
+                                        .foregroundColor(.white)
+                                )
+                        }
+                    }
+                    
                     Spacer()
+                    
                     Button(action: { dismissView() }) {
                         Circle()
                             .fill(Color.gray.opacity(0.80))
@@ -226,6 +242,14 @@ struct NewTaskView: View {
         }
         .alert(isPresented: $showValidationAlert) {
             Alert(title: Text("Invalid Task"), message: Text(validationMessage), dismissButton: .default(Text("OK")))
+        }
+        .alert("Delete Task", isPresented: $showDeleteAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) {
+                deleteTask()
+            }
+        } message: {
+            Text("Are you sure you want to delete this task? This action cannot be undone.")
         }
         .sheet(isPresented: $showDatePicker) {
             datePickerSheet
@@ -742,6 +766,13 @@ struct NewTaskView: View {
         }
         
         dismiss()
+    }
+    
+    private func deleteTask() {
+        if let existingTask = taskToEdit {
+            user.removeTask(existingTask)
+            dismiss()
+        }
     }
     
     // MARK: - Date and Time Picker Sheets
