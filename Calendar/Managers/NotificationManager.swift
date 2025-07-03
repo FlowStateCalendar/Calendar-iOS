@@ -9,16 +9,28 @@ import Foundation
 import UserNotifications
 import SwiftUI
 
-
-class NotificationManager {
+class NotificationManager: ObservableObject {
     static let shared = NotificationManager()
     private init() {}
     
+    // Published property to track authorization status for UI
+    @Published var authorizationStatus: UNAuthorizationStatus = .notDetermined
+    
     // Request notification permission
-    func requestNotificationPermission(completion: @escaping (Bool) -> Void) {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+    func requestNotificationPermission(completion: ((Bool) -> Void)? = nil) {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { [weak self] granted, error in
+            self?.updateAuthorizationStatus()
             DispatchQueue.main.async {
-                completion(granted)
+                completion?(granted)
+            }
+        }
+    }
+    
+    // Check current notification authorization status
+    func updateAuthorizationStatus() {
+        UNUserNotificationCenter.current().getNotificationSettings { [weak self] settings in
+            DispatchQueue.main.async {
+                self?.authorizationStatus = settings.authorizationStatus
             }
         }
     }

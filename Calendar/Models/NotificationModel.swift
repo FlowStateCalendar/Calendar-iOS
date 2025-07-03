@@ -11,8 +11,6 @@ import Foundation
 enum NotificationFrequency: String, Codable, CaseIterable {
     case none = "None"
     case once = "Once"
-    case twice = "Twice"
-    case threeTimes = "Three Times"
     case custom = "Custom"
     
     var displayName: String {
@@ -24,7 +22,6 @@ enum NotificationFrequency: String, Codable, CaseIterable {
 enum NotificationType: String, Codable, CaseIterable {
     case none = "None"
     case local = "Local"
-    case push = "Push"
     
     var displayName: String {
         return self.rawValue
@@ -110,12 +107,11 @@ struct NotificationModel: Codable, Hashable {
     
     static func reminder() -> NotificationModel {
         return NotificationModel(
-            frequency: .twice,
+            frequency: .once,
             type: .local,
             sound: .chime,
             content: "Don't forget your task!",
             timings: [
-                NotificationTiming(minutesBeforeEvent: -60),  // 1 hour before
                 NotificationTiming(minutesBeforeEvent: -10)   // 10 minutes before
             ]
         )
