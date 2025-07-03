@@ -19,4 +19,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
+        .environmentObject(UserModel(name: "Test User", email: "test@example.com"))
 }
