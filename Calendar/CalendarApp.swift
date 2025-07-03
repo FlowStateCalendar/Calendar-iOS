@@ -14,6 +14,7 @@ struct CalendarApp: App {
     //@StateObject private var user = UserModel(name: "", email: "")
     @StateObject private var user: UserModel
     @StateObject private var storageManager = StorageManager.shared
+    @StateObject private var notificationManager = NotificationManager.shared
     
     init() {
         // Try to load existing user data, or create a new user
@@ -22,6 +23,9 @@ struct CalendarApp: App {
         } else {
             _user = StateObject(wrappedValue: UserModel(name: "", email: ""))
         }
+        // Request notification permission and update status on app launch
+        NotificationManager.shared.requestNotificationPermission()
+        NotificationManager.shared.updateAuthorizationStatus()
     }
     
     var body: some Scene {
@@ -30,6 +34,7 @@ struct CalendarApp: App {
                 .environmentObject(appState)
                 .environmentObject(user)
                 .environmentObject(storageManager)
+                .environmentObject(notificationManager)
                 .onOpenURL { url in
                     GIDSignIn.sharedInstance.handle(url)
                 }
